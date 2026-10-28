@@ -37,14 +37,12 @@ Privacy & Security**, scroll to the message about Corpus, and click
 **Open Anyway**. After that it opens normally. On first launch Corpus
 asks where to keep your papers.
 
-**Windows** — there is no ready-made `.exe` yet; you build it once on
-your own machine:
-1. Install Python 3.11 or newer from python.org (not the Microsoft
-   Store version) and tick **Add python.exe to PATH**.
-2. Download and unzip `Corpus-v<version>-windows-src.zip`.
-3. Double-click `build_windows.bat` and wait a few minutes.
-4. Run `dist\Corpus\Corpus.exe`. Keep that folder together. Windows may
-   warn that the app is unrecognised: **More info → Run anyway**.
+**Windows** — download `Corpus-v<version>-windows.zip` and unzip it.
+Open the `Corpus` folder and run `Corpus.exe`. Keep the whole folder
+together: the `.exe` needs the `_internal` folder next to it. Windows
+may warn that the app is unrecognised because it is not signed: click
+**More info → Run anyway**. On first launch Corpus asks where to keep
+your papers.
 
 ## Run from source
 
@@ -58,6 +56,10 @@ python3 -m venv .venv
 
 Tests: `.venv/bin/python -m pytest tests/ -q` (and
 `node --test tests/src/*.test.js` for the frontend).
+
+To build the Windows app yourself, run `build_windows.bat` on Windows
+(it needs Python 3.11+ from python.org); the app appears in
+`dist\Corpus\`.
 
 ## Reporting problems
 
