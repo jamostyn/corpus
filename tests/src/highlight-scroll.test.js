@@ -1,8 +1,8 @@
 // Tests for corpus-highlights.js's scroll-to-highlight — the code that
 // runs when a highlight link in a note is clicked.
 //
-// Jack, 2026-09-22: "clicking on these links doesnt actually bring me to
-// the place where it is highlighted." PDF.js draws a highlight's box
+// Bug (2026-09-22): highlight links did not scroll to the highlight.
+// PDF.js draws a highlight's box
 // only when its page renders; the old code looked for the box, found
 // none on any page not yet scrolled to, and gave up.
 //

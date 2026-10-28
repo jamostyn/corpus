@@ -10,8 +10,6 @@
 // script-loaded AFTER app.js in index.html; function definitions here
 // are hoisted at parse-time, so app.js's event wiring (which references
 // createNote / selectNote etc.) resolves at event-fire time.
-//
-// See CODE_MAP.md → "Notes" for the full picture.
 
 // ---------- Notes ----------
 //
@@ -157,7 +155,7 @@ function renderNoteDetail(host) {
   const detachedNote = !!(state.detached && state.detached.kind === "note");
 
   // Popped out to another window: lock this copy. Two live editors on one
-  // note, each autosaving, overwrite each other (Jack, 2026-09-21).
+  // note, each autosaving, overwrite each other (2026-09-21).
   if (!detachedNote && isDetachedElsewhere("note", n.id)) {
     _flushNoteSave = null;
     _flushNoteSaveOnExit = null;
@@ -263,7 +261,7 @@ function _wireNoteEditor(n) {
   let saveTimer = null;
   // The revision this editor's text is based on. Every save sends it; the
   // server refuses a save based on an older revision instead of writing
-  // over newer work (Jack, 2026-09-28: pop-out edits were overwritten by
+  // over newer work (2026-09-28: pop-out edits were overwritten by
   // the main window's 30-minute-old copy). Advanced by each save.
   let baseRevision = n.revision || 0;
   // Set when the server has refused a stale save. Autosave stops until
@@ -609,8 +607,8 @@ function _wireNoteEditor(n) {
 
 // ---- Keep your place when a note pops out --------------------------
 //
-// Jack, 2026-09-29: "when i pop out a note i lose my place where i was
-// scrolling." The pop-out is a fresh window that loads the note at the
+// Popping out a note used to lose the scroll position (2026-09-29). The
+// pop-out is a fresh window that loads the note at the
 // top. It is also a different width, so text reflows and a pixel offset
 // would land somewhere else; the place is recorded as the top-level block
 // at the top of the view plus how far into it, which survives reflow.
@@ -661,9 +659,8 @@ function restoreNoteScrollAnchor(body, anchor) {
 
 // ---- Note settings dropdown ----------------------------------------
 //
-// Jack, 2026-09-29: "make the delete button on a note hidden behind a
-// settings button that opens a drop down with settings with and x to
-// close settings. only option there is delete for now". The menu lives
+// Delete sits behind a settings button that opens a dropdown with a close
+// control (2026-09-29); delete is the only option for now. The menu lives
 // in the note header's own markup (renderNoteDetail), so it is rebuilt
 // with the note and never outlives it. New note-level options go in that
 // markup as another `role="menuitem"` button, wired here.
@@ -748,7 +745,7 @@ async function deleteNote(id) {
 // Reasons:
 //   1. execCommand("indent") on the FIRST item of a list wraps the
 //      whole list in a <blockquote> instead of creating a nested
-//      <ul>/<ol>. That means the marker never cycles (Jack's report).
+//      <ul>/<ol>. That means the marker never cycles.
 //   2. execCommand("outdent") in some browsers deletes text nodes it
 //      shouldn't.
 //   3. Doing it ourselves lets us tag the phantom parent <li> (the
@@ -799,8 +796,8 @@ function _indentListItem(li) {
     // First item in its list — no sibling to nest under. Insert a
     // phantom <li> (class="li-phantom", CSS hides its marker) with
     // a fresh sub-list, then move THIS li AND every sibling that
-    // follows it into the sub-list. Rationale: Jack's mental model
-    // for tabbing a first item is "make this whole list a sub-list."
+    // follows it into the sub-list. Rationale: tabbing a first
+    // item is expected to "make this whole list a sub-list."
     // Indenting just one lone item at the top and leaving the rest
     // flat reads as broken.
     const phantom  = document.createElement("li");
@@ -829,8 +826,7 @@ function _outdentListItem(li) {
   const parentLi = subList.parentNode;
 
   // True top-level case: no wrapping <li> to escape from. Do nothing —
-  // per Jack's stated preference, outdenting at the highest tier
-  // should not destroy the list.
+  // outdenting at the highest tier should not destroy the list.
   if (!parentLi || parentLi.tagName !== "LI") return;
 
   // Phantom-wrapped case: the phantom was created by an "indent first
@@ -1457,8 +1453,8 @@ function _highlightLinkHtml(kind, id, highlightId, label) {
 /** Give the editor focus back and put the caret where it was, WITHOUT
  *  scrolling.
  *
- *  Jack, 2026-09-25: "when i add a paper via a link it scrolls up to the
- *  top of the document." A picker or input had taken focus; a plain
+ *  Adding a paper via a link used to scroll the note to the top
+ *  (2026-09-25). A picker or input had taken focus; a plain
  *  focus call with no options scrolls the editor to where the browser puts a fresh
  *  caret — the top — before the saved range is restored, so a link
  *  added at the bottom of a long note left the view at its first line.
@@ -1476,7 +1472,7 @@ function _restoreCaret(body, savedRange) {
 function _insertHighlightLink(body, savedRange, kind, slug, highlightId, text) {
   _restoreCaret(body, savedRange);
   // The highlight's own text is the label — that is the "linked full
-  // quote" Jack described. Falls back to the slug when the viewer
+  // quote". Falls back to the slug when the viewer
   // could not read any text for it.
   const label = (text || "").trim() || slug;
   document.execCommand("insertHTML", false,
@@ -1530,8 +1526,8 @@ function _openEntityLinkPicker(savedRange, body, onInserted) {
   const dirEl     = overlay.querySelector(".note-link-sort-dir");
   let active = modes[0];
 
-  // Sort choice per type, remembered across pickers — Jack, 2026-09-28:
-  // "so i can sort by most recent added papers for example." Options come
+  // Sort choice per type, remembered across pickers (2026-09-28),
+  // e.g. most recently added papers first. Options come
   // from each MODES entry's `sorts` (the same list as the Papers sidebar).
   const prefs = _linkSortPrefs();
   const sortFor = (m) => {
@@ -1579,8 +1575,8 @@ function _openEntityLinkPicker(savedRange, body, onInserted) {
     // Filter on the ROW, not the rendered label: `modeRowMatches` reads
     // fields the label doesn't show (a paper's author, an author's
     // institution). Filtering the label alone meant typing an author
-    // name here matched nothing — the same defect Jack reported in the
-    // project member picker on 2026-09-14.
+    // name here matched nothing — the same defect the
+    // project member picker had on 2026-09-14.
     // Sort BEFORE the 200-row cap, or "newest first" would only reorder
     // whichever 200 rows happened to come first.
     const cur = sortFor(active);

@@ -1,17 +1,16 @@
 """Slug collisions on import — who wins, and who gets a suffix.
 
-Jack, 2026-09-17: "is corpus prepared to handle slug collisions? or if
-a slug is entered as name-year-2 when no 1 is present?" Asked with 25
+Two questions (2026-09-17): are slug collisions handled, and what happens
+if a slug is entered as name-year-2 when no -1 is present? Raised with 25
 papers staged in the inbox and 1108 queued behind them, 56 of which
 carry a `-<year>-N` suffix.
 
-Answer to the second half: yes. A `-2` with no `-1` correctly yields
-`-1` — the resolver fills the gap rather than counting past it. Corpus
-promises nothing about what the number MEANS (Paper Machine's
-"-1 = published first" is that project's convention, not this one), so
-filling gaps is fine and is pinned below.
+Second question: a `-2` with no `-1` correctly yields `-1` — the
+resolver fills the gap rather than counting past it. Corpus promises
+nothing about what the number MEANS (it is not a publication-order
+convention), so filling gaps is fine and is pinned below.
 
-The first half was NOT fine. `_resolve_slug_collision` compared
+The first question exposed a bug. `_resolve_slug_collision` compared
 `.strip().lower()` on both sides instead of using `normalize_doi`, and
 the literal string "unknown" therefore compared equal to itself — two
 different papers with no DOI, same first author, same year, resolved to
@@ -96,13 +95,13 @@ def test_an_unused_slug_is_returned_unchanged(corpus_dir):
     assert _resolve_slug_collision("nobody-1999", "10.1000/a") == "nobody-1999"
 
 
-# ---------- Jack's second question ----------
+# ---------- gaps in the numbering ----------
 
 def test_a_gap_in_the_numbering_is_filled_not_skipped(corpus_dir):
     """Catches: counting past an existing suffix instead of finding the
     first free one.
 
-    Jack's case: `-2` exists with no `-1`. The corpus already contains
+    The case: `-2` exists with no `-1`. The corpus already contains
     slugs like this (`pan-2025-1` with no `-2`), and 56 of the 1108
     queued imports carry a suffix. `-1` is free, so `-1` is correct —
     Corpus attaches no meaning to the number, so a gap is just a gap."""

@@ -22,7 +22,7 @@ and fires a scroll event.
 
 These are source-level assertions on `src/app.js`. The boot path and
 the gutter both need a live DOM, a PDF.js iframe and postMessage, so
-the vm harness cannot execute them — see TESTING.md § Known gaps. Every
+the vm harness cannot execute them. Every
 test below pins a link in that chain whose removal is SILENT.
 """
 from __future__ import annotations

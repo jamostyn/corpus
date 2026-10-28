@@ -24,9 +24,9 @@ What stays for the LLM agent:
     obvious wrongness — e.g. Crossref returns a stale title)
 
 Usage:
-  python3 scripts/prefill_summary.py papers/smith-2023.pdf
-  python3 scripts/prefill_summary.py papers/smith-2023.pdf --out -
-  python3 scripts/prefill_summary.py papers/smith-2023.pdf --force
+  python3 prefill_summary.py papers/smith-2023.pdf
+  python3 prefill_summary.py papers/smith-2023.pdf --out -
+  python3 prefill_summary.py papers/smith-2023.pdf --force
 
 Default writes to summaries/<slug>.md. Refuses to overwrite an existing
 complete summary unless --force is passed.
@@ -38,7 +38,7 @@ import datetime as _dt
 import sys
 from pathlib import Path
 
-# Sibling-script imports — scripts/ on sys.path.
+# Sibling-script imports — this directory on sys.path.
 _SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(_SCRIPT_DIR))
 

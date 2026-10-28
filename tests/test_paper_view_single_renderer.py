@@ -1,8 +1,7 @@
 """One paper-info renderer, usable in any host.
 
-Jack (bug report, 2026-09-25), on the popped-out note's side panel: "i
-should be able to see all the paper info here. not just this limited
-info". The panel had its own compact renderer — title, authors, year,
+Bug (2026-09-25): the popped-out note's side panel showed only limited
+paper info instead of all of it. The panel had its own compact renderer — title, authors, year,
 venue, DOI, abstract — because the full one wrote into `#paper-detail`
 directly and could not be pointed anywhere else.
 
@@ -28,7 +27,7 @@ def _body_of(js: str, fn: str) -> str:
 
 def test_the_note_panel_uses_the_shared_renderer_not_its_own():
     """Catches the panel growing a second, cut-down paper view again —
-    the exact state Jack reported. Every field added to the main view
+    the exact state that was reported. Every field added to the main view
     would then be missing from the panel until someone noticed."""
     ws = (SRC / "note-workspace.js").read_text(encoding="utf-8")
     assert "renderPaperInto(" in ws, "the note panel no longer renders the full paper view"

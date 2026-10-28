@@ -71,6 +71,9 @@ const state = {
   testingFeatures: [],
   testingFilter: "",
   selectedTestingId: null,
+  graphNodes: [],           // dev-only Graph tab: papers in the citation graph
+  graphFilter: "",
+  selectedGraphSlug: null,
   projectDetail: null,       // /api/project/<id> response (carries `resolved`)
 };
 
@@ -271,13 +274,26 @@ const MODES = [
     emptyStateHtml: () => "<p>Pick a feature under test.</p>",
     searchFields: (r) => [r.title, r.summary],
     searchHint: "feature name" },
+  // DEV ONLY — the citation graph in 3D (experimental, 2026-10-22).
+  // Same forwarding pattern as Testing: hooks resolve window.DevGraph at
+  // call time, which exists only when src/dev_only/graph.js has loaded.
+  { id: "graph", stateKey: "graphNodes", filterKey: "graphFilter", selectedKey: "selectedGraphSlug",
+    listId: "graph-list", filterId: "graph-filter", detailId: "graph-detail", dataAttr: "data-graph-slug",
+    load:         () => window.DevGraph && window.DevGraph.load(),
+    render:       () => window.DevGraph && window.DevGraph.render(),
+    select:       (id) => window.DevGraph && window.DevGraph.select(id),
+    renderDetail: () => window.DevGraph && window.DevGraph.renderDetail(),
+    loadPolicy: "always", devOnly: true,
+    emptyStateHtml: () => "<p>No citations between papers in this corpus yet.</p>",
+    searchFields: (r) => [r.title, r.slug],
+    searchHint: "title or slug" },
 ];
 const MODES_BY_ID = Object.fromEntries(MODES.map(m => [m.id, m]));
 
 // ---------- Back / forward ----------
 //
-// Jack, 2026-09-21: "can you add back and forward arrows somewhere up
-// here so you can navigate easily between different places?"
+// Requirement (2026-09-21): back and forward arrows navigate between
+// previously visited places.
 //
 // A place is {mode, id}. Recording hangs off ONE choke point — every
 // mode's `select` is wrapped below — rather than being sprinkled
@@ -355,8 +371,8 @@ window.LINK_ATTRS = LINKABLE_MODES.map(m => m.linkAttr);
 
 // Fresh rows for a picker, WITHOUT touching the tab that owns the list.
 //
-// Jack, 2026-09-29: "when a note is popped out, the link paper feature
-// doesnt update when new papers are added to the corpus". The pickers
+// Bug (2026-09-29): in a popped-out note the link-paper picker did not
+// pick up papers added to the corpus. The pickers
 // read `state[<stateKey>]`, which a window fills once; only the window
 // that ran an import reloads its papers afterwards, so a popped-out
 // note's picker kept the paper list from the moment it opened. Pickers
@@ -385,8 +401,8 @@ async function fetchModeList(mode) {
 // Before 2026-09-14 each of those six places had its own copy. The
 // sidebars searched several fields; both pickers searched only the
 // DISPLAY label, which for a paper is "Title (year)" — so typing an
-// author name into "Add papers…" matched nothing (Jack's report:
-// "should be able to search by author here as well"). Adding author
+// author name into "Add papers…" matched nothing (reported as "should be
+// able to search by author here as well"). Adding author
 // to one picker would have made a seventh copy.
 //
 // `searchFields` returns an ARRAY, and each element is tested
@@ -555,7 +571,7 @@ function _loadDevOnly() {
   document.querySelectorAll(".tabs .tab[data-dev-only]").forEach(t => { t.hidden = false; });
 
   ["/dev_only/bug-reporter.css", "/dev_only/tooltip-editor.css", "/dev_only/planning.css",
-   "/dev_only/testing.css"].forEach(href => {
+   "/dev_only/testing.css", "/dev_only/graph.css"].forEach(href => {
     const css = document.createElement("link");
     css.rel = "stylesheet";
     css.href = href;
@@ -573,7 +589,11 @@ function _loadDevOnly() {
     // calls on every pointer move exists.
     ["/dev_only/draw-geometry.js", "/dev_only/bug-reporter.js",
      "/dev_only/tooltip-editor.js", "/dev_only/planning.js",
-     "/dev_only/testing.js"].forEach(src => {
+     "/dev_only/testing.js",
+     // Graph tab: three.js, then its orbit controls (which attach to
+     // THREE), then the model, then the view that uses all three.
+     "/dev_only/vendor/three.min.js", "/dev_only/vendor/OrbitControls.js",
+     "/dev_only/graph-model.js", "/dev_only/graph.js"].forEach(src => {
       const s = document.createElement("script");
       s.src = src;
       s.async = false;
@@ -629,9 +649,8 @@ function isDetachedElsewhere(kind, id) {
 
 /** The "open in a separate window" panel, for papers and notes alike.
  *
- *  Jack, 2026-09-21: "theres an error where the note can be open in pop
- *  out and the normal view. fix this to prevent editing over anything."
- *  Papers had this placeholder; notes never did, so a popped-out note
+ *  A note could be open in a pop-out and the main window at once, so two
+ *  editors autosaved over each other (2026-09-21). Papers had this placeholder; notes never did, so a popped-out note
  *  stayed editable in the main window and the two autosaves overwrote
  *  each other. One builder now serves both.
  *
@@ -764,8 +783,7 @@ async function boot() {
         // This used to `await loadPapers()` before fetching the note. On
         // 2026-09-21, after a restart, a cold /api/papers over ~620
         // summaries took 251s — and the popped-out note sat completely
-        // blank for all of it. Jack: "when i clicked pop out on a note it
-        // is completely blank."
+        // blank for all of it.
         loadPapers().catch(() => {});
         // Titles for documents a note links to, for the same panel header.
         loadDocuments().catch(() => {});
@@ -895,7 +913,7 @@ function _afterDetachChange(kind, id) {
     // Locking can draw from memory. UNLOCKING must reload from disk: the
     // note was edited in the other window meanwhile, and the copy in
     // `state.noteDetail` is from before it popped out. Re-showing that
-    // copy is how Jack's pop-out edits were overwritten on 2026-09-28 —
+    // copy is how pop-out edits were overwritten on 2026-09-28 —
     // the next autosave here sent the 30-minute-old text back.
     if (isDetachedElsewhere("note", id)) renderNoteDetail();
     else selectNote(id);
@@ -976,7 +994,7 @@ function renderPapers() {
 
 function selectPaper(slug) {
   state.selectedSlug = slug;
-  // Keep whatever subtab the user was last on — Jack's ask: when
+  // Keep whatever subtab the user was last on: when
   // arrow-keying through papers, staying on PDF is expected. If the
   // next paper has no PDF, the render code falls back to info
   // automatically (activePdf becomes "" when hasPdf is false).
@@ -1004,7 +1022,7 @@ function switchMode(id) {
     $("#" + other.detailId).hidden = !active;
   }
   // Sort strip is Papers-only for now (will port to other modes per
-  // the propagate-view-changes rule once Jack signs off on the pattern).
+  // the other modes once the pattern is settled).
   const sortWrap = $("#papers-sort-wrap");
   if (sortWrap) sortWrap.hidden = (id !== "papers");
 
@@ -1223,7 +1241,7 @@ function showEmptyState(reason = "no-corpus") {
   // (5.4 MB, ~95ms per file on first access). Until 2026-09-20 the
   // pane simply started on the no-corpus copy, so for those 20 seconds
   // Corpus told a user with a perfectly good corpus to "pick a corpus
-  // directory". Jack read that as the app forgetting his corpus, which
+  // directory". That read as the app forgetting the corpus, which
   // is exactly what it said.
   if (reason === "loading") {
     const dir = (state.config && state.config.corpus_dir) || "";
@@ -1719,8 +1737,7 @@ function _scrollPaperPaneToHighlight(id, tries) {
 
 /** The `src` for a Corpus PDF viewer iframe. The ONLY place it is built.
  *
- *  Jack, 2026-09-21: "the table of contents starts out open when i
- *  clicked on the paper link here. it should always start closed." The
+ *  The table of contents must always start closed (2026-09-21). The
  *  paper pane had passed `pagemode=none` for months; the note-workspace
  *  panel and the Testing tab each built their own URL and left it out.
  *  Three copies of one fact, drifted — so there is now one.
@@ -1853,9 +1870,9 @@ document.addEventListener("click", (e) => {
     }
     switchMode(entityLink.m.id);
     entityLink.m.select(linkId);
-    // Docked view: a highlight link still scrolls. Jack asked for
-    // "brings up that paper and scrolls to that highlight" — the
-    // popped-out panel is where he'll mostly use it, but the same link
+    // Docked view: a highlight link still scrolls. A link must
+    // bring up that paper and scroll to the highlight — the
+    // popped-out panel is the main use, but the same link
     // in the Notes tab should not silently do half the job. Retried
     // briefly because the viewer has to open the document first, and
     // there is no ready message on the bridge.
@@ -1900,9 +1917,9 @@ document.addEventListener("click", async (e) => {
   }
 });
 
-// Arrow-key navigation through the active tab's list. Jack's ask:
-// down/up moves selection between adjacent items so he can scan
-// through a stack without clicking each row.
+// Arrow-key navigation through the active tab's list: down/up
+// moves selection between adjacent items so a stack can be scanned
+// without clicking each row.
 //
 // Suppressed when:
 //   * User is typing in an <input> or <textarea> (filter box, add-task
@@ -1974,8 +1991,7 @@ document.addEventListener("keydown", (e) => {
 
 // Boot.
 // A failed boot used to be a 3.5s toast over an otherwise empty window.
-// Jack, 2026-09-21: "when i clicked pop out on a note it is completely
-// blank" — the log showed boot stopping after /api/tooltips in both
+// Popping out a note showed a blank window (2026-09-21): the log showed boot stopping after /api/tooltips in both
 // windows, and nothing on screen or on disk said why. Now it stays on
 // screen, and in dev it lands in server.log with its stack.
 boot().catch(e => {

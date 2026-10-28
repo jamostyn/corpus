@@ -9,8 +9,6 @@
 // (used for the deep-link on each affiliated institution).
 // Depends on globals from entity-detail.js: `EntityDetail.render` —
 // shared render skeleton for author / institution / journal panes.
-//
-// See CODE_MAP.md for the full picture.
 
 // ---------- Author detail ----------
 

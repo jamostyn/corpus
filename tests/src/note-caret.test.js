@@ -1,7 +1,7 @@
 // Handing focus back to the note editor must not scroll it.
 //
-// Jack, 2026-09-25: "when i add a paper via a link it scrolls up to the
-// top of the document." The link picker takes focus; the editor used
+// Bug (2026-09-25): adding a paper via a link scrolled the note to the
+// top. The link picker takes focus; the editor used
 // `body.focus()` to get it back, which scrolls to where a fresh caret
 // would go — the top — before the saved range is restored.
 //

@@ -322,8 +322,8 @@ def update_note(nid):
         abort(404, description="note_missing")
     existing = json.loads(p.read_text(encoding="utf-8"))
     payload = request.get_json(silent=True) or {}
-    # Stale-write guard. Jack, 2026-09-28: "when i am editing a note in the
-    # popped out form, it doesnt save it." It did save — then the main
+    # Stale-write guard. Reported 2026-09-28: edits in a popped-out note
+    # appeared not to save. They did save — then the main
     # window, re-showing the note from its copy of 30 minutes earlier,
     # saved that copy over it (server.log: 11385 chars from the pop-out,
     # then 11374, the exact pre-pop-out length). A save now names the

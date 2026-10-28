@@ -1,9 +1,8 @@
 """The Documents tab: a PDF to read, highlight and annotate — nothing more.
 
-Jack, 2026-09-25: "i want to add an another documents tab. for now i will
-just be uploading a pdf of a book chapter. i dont want any fancy
-integrations aside from all the text, highlight, and note features for
-the paper pdfs. but none of the api stuff."
+Requirement (2026-09-25): a second documents tab for standalone PDFs such
+as a book chapter. It gets the text, highlight, and note features of
+paper PDFs but no API-backed enrichment.
 """
 from __future__ import annotations
 
@@ -32,7 +31,7 @@ def test_an_uploaded_pdf_is_listed_and_served(client, corpus_dir):
 def test_a_document_never_touches_the_paper_pipeline(client, corpus_dir, monkeypatch):
     """Catches a document leaking into papers/ or summaries/. Everything
     there is swept by Scan's backfill, citers and the bridge search — the
-    "api stuff" Jack ruled out — and a book chapter would show up in the
+    API-backed enrichment documents are excluded from — and a book chapter would show up in the
     paper list with an 'unknown' title. Also: no network, ever."""
     import _api_http
     monkeypatch.setattr(_api_http, "api_get_json",
@@ -99,9 +98,8 @@ def test_only_pdfs_are_accepted(client, corpus_dir):
 
 # ---------- 2026-09-25, round 2: rename, projects, note links, pop-out ----------
 #
-# Jack: "should be able to link documents from notes. also renaming should
-# be enabled. document pop out should also be implemented. and documents
-# can also be added to projects"
+# Requirements: documents can be linked from notes, renamed, popped out,
+# and added to projects.
 
 def test_renaming_changes_the_title_but_never_the_id(client, corpus_dir):
     """Catches a rename that moves the document: the id is what note

@@ -7,8 +7,6 @@
 // `Provenance.badgeFromArr`, `Coverage.inSource`.
 // Depends on globals from entity-detail.js: `EntityDetail.render` —
 // shared render skeleton for author / institution / journal panes.
-//
-// See CODE_MAP.md for the full picture.
 
 // ---------- Journal detail ----------
 

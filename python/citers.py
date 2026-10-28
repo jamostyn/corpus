@@ -1,16 +1,10 @@
 """Stored citers — every known work citing a paper, from OpenAlex.
 
-Jack, 2026-09-22: "implement a storage for the citers of each paper.
-integrate it into the info panel and have clear distinctions like for
-references about which citers are in the corpus. dont integrate the
-citers list into any kind of bridge finder yet."
-
 WHAT IS STORED
 --------------
 `<corpus>/citers/<slug>.json`, one per paper. Fetched three ways, all
 through `fetch_and_store`: the info panel's button (one paper), every
-import (the papers it just added — Jack, 2026-09-22: "if its not the
-default to fetch that when a paper is imported, make it so"), and
+import (the papers it just added), and
 `backfill()` over the whole corpus. The corpus-wide run was ~3,000
 OpenAlex requests at 742 papers, PRISMA alone ~530, which is why the
 import only fetches what it added.
@@ -26,8 +20,7 @@ citation index's DOI map, because it changes every time a paper is
 imported — a stored flag would be wrong the day after it was written.
 
 NOT USED BY THE BRIDGE SEARCH (yet). `bridges_api` still fetches its own
-capped citer ids. Pointing it at this store is the planned next step —
-see ROADMAP "Stored citers → bridge search".
+capped citer ids. Pointing it at this store is the planned next step.
 """
 from __future__ import annotations
 
@@ -102,9 +95,8 @@ def _complete_ids(data: dict | None) -> list[str] | None:
 # Derived index of citing ids, one file for the whole corpus:
 # {"version": n, "papers": {slug: [mtime_ns, size, [ids...]]}}.
 #
-# Jack, 2026-09-24: "even tho it has most citers stored, it still loops
-# through them. seems like could be smarter". It did — the bridge search
-# parsed every paper's full store (ids, DOIs, years, titles) on every
+# Observed 2026-09-24: even with most citers stored, the bridge search
+# looped through them. It parsed every paper's full store (ids, DOIs, years, titles) on every
 # run, ~0.6s a paper measured on the live import, ~10 minutes at 1,038
 # papers, to rebuild an answer that had changed for a handful of them.
 #
@@ -298,8 +290,7 @@ def fetch_and_store(slug: str, doi: str, on_progress=None,
 def backfill(slugs: list[str] | None = None, on_step=None, force: bool = False) -> dict:
     """Fetch citers for many papers. Skips any already stored.
 
-    Jack, 2026-09-22: "can you fetch the citations for all the papers
-    curently in corpus and ... make it so" they are fetched on import.
+    Used for the corpus-wide fetch and for the post-import fetch.
     Both go through here: `slugs=None` means the whole corpus; the import
     passes just the papers it added.
 

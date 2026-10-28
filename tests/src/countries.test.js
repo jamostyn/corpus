@@ -1,7 +1,7 @@
 // Tests for src/countries.js — ISO country codes → readable names.
 //
-// Jack, 2026-09-17: "can you also have it show the full name of the
-// country? not sure which one this is." Corpus rendered raw OpenAlex
+// Requirement (2026-09-17): show the full country name next to the code.
+// Corpus rendered raw OpenAlex
 // `country_code` values ("NL", "SG", "AE") in nine places.
 //
 // This module is self-contained and pure, so unlike most of the

@@ -106,7 +106,7 @@ def test_member_rows_do_not_rely_on_the_deep_link_delegation():
     mode's own `select` works for every member kind by construction.
 
     This was live for about ten minutes while the feature was built;
-    it was caught writing the CODE_MAP row, not by a test, which is
+    it was caught while documenting the feature, not by a test, which is
     why there is now a test."""
     src = _PROJECTS_JS.read_text(encoding="utf-8")
     # Bound to renderProjectDetail ONLY, and strip `//` comments: the

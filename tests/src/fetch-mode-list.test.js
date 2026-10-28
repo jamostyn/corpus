@@ -1,8 +1,8 @@
 // Tests for app.js::fetchModeList — the refresh the note link picker and
 // the project member picker run every time they open.
 //
-// Jack, 2026-09-29: "when a note is popped out, the link paper feature
-// doesnt update when new papers are added to the corpus". The pickers
+// Bug (2026-09-29): in a popped-out note the link-paper picker did not
+// pick up papers added to the corpus. The pickers
 // only loaded a list when it was EMPTY, so a window that already had a
 // paper list never saw papers imported after it opened.
 

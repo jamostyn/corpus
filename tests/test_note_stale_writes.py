@@ -1,9 +1,7 @@
 """A note edited in two windows must never lose the newer edits.
 
-Jack, 2026-09-28: "when i am editing a note in the popped out form, it
-doesnt save it. i just spent a little while on the prelims table notes
-and when i closed that tab and went back to the notes page, it wasnt
-updated."
+Bug (2026-09-28): edits made to a note in the popped-out window were not
+visible in the notes page after the pop-out was closed.
 
 server.log showed the pop-out's saves landing (11,385 chars), then two
 saves of 11,374 chars — the exact length the note had before it popped

@@ -122,8 +122,7 @@ def _apply_env() -> None:
             # boot. But this also catches the source-tree refusal from
             # ensure_corpus_layout, and a bare `pass` made that
             # invisible — which is how a bad corpus_dir stayed on disk
-            # unnoticed. CONTRIBUTING.md requires a log on every
-            # swallowing except; this one had none.
+            # unnoticed. Every swallowing except logs; this one had none.
             logger.warning("corpus_layout_skipped path=%s", corpus, exc_info=True)
     mailto = cfg.get("mailto", "").strip()
     if mailto:

@@ -1,9 +1,8 @@
 """Citation bridges — indirect connections between corpus papers.
 
-Jack, 2026-09-17: "check for bridges between papers in the corpus …
-the shortest paper connection … how long the bridge is between those
-connections, and the title and some basic information about the
-connecting papers."
+Requirement (2026-09-17): find the shortest connection between corpus
+papers, report how long the bridge is, and show the title and basic
+information of the connecting papers.
 
 A bridge is A -> M -> B where A and B are both in the corpus and M is
 not. Found by MEETING IN THE MIDDLE: intersect A's references with the
@@ -12,7 +11,7 @@ instead costs 64 requests and 18.4s for one pair and usually finds
 nothing; the intersection answers every pair at once for ~70 requests.
 
 **No test here touches the network.** `openalex_client` is monkeypatched
-throughout. CLAUDE.md forbids live API calls in tests, and a bridge
+throughout. Live API calls are forbidden in tests, and a bridge
 suite is exactly where that rule is easiest to break by accident.
 """
 from __future__ import annotations

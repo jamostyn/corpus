@@ -1,7 +1,7 @@
 """The frontend is served with fixed content types, whatever the OS says.
 
-Jack, 2026-09-29, on the Windows build: "the windows pdf viewer is
-completely black. it shows the controls but no PDF". Flask takes each
+Bug (2026-09-29, Windows build): the PDF viewer was completely black,
+showing the controls but no PDF. Flask takes each
 static file's type from `mimetypes`, which on Windows is patched from the
 registry; a registry that maps `.mjs` / `.js` to `text/plain` makes the
 browser refuse pdf.js's ES modules while the classic-script main app keeps

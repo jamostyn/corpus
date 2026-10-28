@@ -1,9 +1,7 @@
 """The paper Coverage table must describe what Corpus actually collects.
 
-Jack, 2026-09-22: "i looked a the list of what information is being
-collected for the different streams and it still seems to suggest that
-citer information is not being collected by choice ... do what you can
-to make sure that information stays updated going forward."
+Bug (2026-09-22): the table still suggested that citer information is
+not collected by choice, and it must stay current as collection changes.
 
 The table (`coverageRows` in src/paper-detail.js) is hand-written, and
 the fields it describes are written by `render_frontmatter` in

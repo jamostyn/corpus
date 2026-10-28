@@ -2,9 +2,8 @@
 //
 // OpenAlex stores ISO 3166-1 alpha-2 codes ("NL", "SG", "AE"). Corpus
 // rendered those raw in nine places, which is unreadable for anything
-// outside the handful everyone knows — Jack, 2026-09-17: "can you also
-// have it show the full name of the country? not sure which one this
-// is."
+// outside the handful everyone knows. The full country name is shown
+// alongside the code (2026-09-17).
 //
 // The mapping comes from `Intl.DisplayNames`, which is ICU/CLDR data
 // built into the runtime. Deliberately NOT a hand-written table: an

@@ -146,7 +146,7 @@ def test_duplicate_dois_are_surfaced_not_collapsed(corpus_dir):
     """Catches: `doi_to_slugs` mapping to a single slug.
 
     Two summaries CAN carry the same DOI — the same paper imported
-    twice under different slugs. Jack's corpus has exactly this
+    twice under different slugs. A real library can have exactly this
     (`865.full` and `ashby-2022`). Keeping only one would drop real
     links from the other; hiding the condition would leave inflated
     counts unexplained."""

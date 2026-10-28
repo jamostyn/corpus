@@ -1,5 +1,6 @@
 # --- Python -------------------------------------------------------
 .venv/
+.venv-bench/
 __pycache__/
 *.pyc
 *.pyo
@@ -14,7 +15,7 @@ node_modules/
 .env.local
 
 # --- User CORPUS DATA (defensive — real corpora live outside this
-#     repo, e.g. ~/Documents/CorpusTest/, but if anyone ever creates a
+#     repo, e.g. ~/Documents/MyLibrary/, but if anyone ever creates a
 #     corpus dir INSIDE the repo for testing, don't accidentally commit
 #     the PDFs, extracted summaries, or PyMuPDF text sidecars.) --------
 papers/*.pdf

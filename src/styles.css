@@ -171,8 +171,8 @@ body {
 
 /* Author / institution / journal detail — apply the same white-card
    section treatment as Papers so each block of information visually
-   separates from the next (Jack flagged this as a useful visual
-   indicator that Papers had but the other three didn't).
+   separates from the next (a visual indicator that Papers had but the
+   other three didn't).
    Sections that get boxed: meta grid + every pd-affils / pd-refs /
    pd-coverage inside these panes. */
 .author-detail dl.pd-meta,
@@ -386,8 +386,8 @@ body {
    The modal ones previously declared only `width` + `margin-bottom`,
    so they missed the padding and `font: inherit` that make the sidebar
    boxes legible: the placeholder rendered in the browser's default
-   search font, flush against the border. Visible in Jack's 2026-09-14
-   screenshot, where "Filter papers…" sits clipped at the edge of the
+   search font, flush against the border. Seen on 2026-09-14,
+   where "Filter papers…" sat clipped at the edge of the
    box. `.note-link-filter` had the same gap since the notes picker was
    built; `.pj-picker-filter` inherited it by being modelled on that. */
 .sidebar-header input,
@@ -1894,8 +1894,7 @@ body.corpus-detached .paper-detail .pd-authors { font-size: 12px; margin-bottom:
 /* ---------- Job progress ---------- */
 
 /* Floats over the page instead of sitting in the layout.
-   Jack, 2026-09-21: it "blocks out the total paper count at the bottom
-   bc it pushes it down" — in the document flow it added its own height
+   In the document flow it covered the total paper count (2026-09-21): it added its own height
    above a full-height layout, shoving the sidebar footer off-screen.
    Bottom-right keeps it clear of that footer, which is bottom-left. */
 .job-progress {
@@ -1924,8 +1923,7 @@ body.corpus-detached .paper-detail .pd-authors { font-size: 12px; margin-bottom:
 /* Each value gets its OWN fixed-width slot, right-aligned, with
    tabular digits (every numeral the same width).
 
-   Jack, 2026-09-22: "its still shifting the text as the characters
-   change. make each text its own thing that is anchored." One shared
+   Text shifted as the characters changed (2026-09-22). One shared
    right-aligned box was not enough — "9s" growing to "10s" pushed the
    step and count text left inside it. A fixed width per slot means a
    value can only change within its own box: nothing else moves, and an

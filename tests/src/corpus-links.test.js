@@ -5,7 +5,7 @@
 // whole block when both were. On a paper that cites two others but is
 // cited by none, the user saw a "Cites" heading and no "Cited by" at
 // all — indistinguishable from the reverse direction never having been
-// built. Jack reported it as a missing feature. Every empty-state test
+// built. It was reported as a missing feature. Every empty-state test
 // below is pinning that.
 
 const { test } = require("node:test");
@@ -38,7 +38,7 @@ test("returns markup rather than an empty string when there are no links", () =>
 });
 
 test("shows Cited by even when only Cites is populated", () => {
-  // The exact shape Jack hit: turner-2024 cites 2, cited by 0.
+  // The exact shape reported: turner-2024 cites 2, cited by 0.
   const html = CL.render({
     cites: ["blanco-2023"], citedBy: [], hasDoi: true,
     refCounts: { total: 29, with_doi: 28, linked: 1 },
@@ -106,7 +106,7 @@ test("counts match the number of rendered entries", () => {
 test("a paper with no DOI is told why nothing can cite it", () => {
   // Matching is DOI-only, so a paper without one can never be a link
   // target. Without this line its permanently empty "Cited by" looks
-  // like a bug. 2 of 57 papers in Jack's corpus are in this state.
+  // like a bug. 2 of 57 papers in one real library are in this state.
   const html = CL.render({ cites: [], citedBy: [], hasDoi: false, refCounts: {} });
   assert.match(html, /no DOI, so references to it cannot be matched/);
 });
@@ -127,7 +127,7 @@ test("a paper with a DOI gets no no-DOI note", () => {
 // ---------- reference-count note ----------
 
 test("no reference list is stated outright", () => {
-  // 8 of 57 papers in Jack's corpus have refs_source: none. Silence
+  // 8 of 57 papers in one real library have refs_source: none. Silence
   // there looks like a rendering failure.
   const html = CL.render({ cites: [], citedBy: [], hasDoi: true,
                            refCounts: { total: 0, with_doi: 0, linked: 0 } });

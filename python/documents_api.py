@@ -1,11 +1,6 @@
 """Corpus — /api/documents blueprint. Added 2026-09-25.
 
-Jack: "i want to add an another documents tab. for now i will just be
-uploading a pdf of a book chapter. i dont want any fancy integrations
-aside from all the text, highlight, and note features for the paper
-pdfs. but none of the api stuff."
-
-So a document is a PDF with a title and highlights, and nothing else:
+A document is a PDF with a title and highlights, and nothing else:
 no metadata lookup, no summary, no citers, no bridges. It is read in the
 same PDF.js viewer as a paper, so text selection, search, highlights and
 anchored notes all work unchanged — the viewer only needs to know which

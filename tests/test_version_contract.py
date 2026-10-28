@@ -1,7 +1,8 @@
 """`python/_version.py` is the single source of truth for the version.
 
-Three consumers read it, and they must never disagree:
-  * `config_api.get_version`  -> GET /api/version, shown in the UI
+Four consumers read it, and they must never disagree:
+  * `config_api.get_version`  -> GET /api/version (nothing displays it yet)
+  * `_api_http.corpus_user_agent` -> the User-Agent sent to every API
   * `build_ship.py`           -> names the release zip Corpus-v<v>.zip
                                  and gates on a matching CHANGELOG section
   * `pyinstaller_corpus.spec` -> stamps the .app bundle
@@ -78,3 +79,15 @@ def test_version_is_a_plain_dotted_release_string():
     from _version import __version__
     assert re.fullmatch(r"\d+\.\d+\.\d+(-dev)?", __version__), (
         f"unexpected version shape: {__version__!r}")
+
+
+def test_the_user_agent_carries_the_real_version(monkeypatch):
+    """Catches the User-Agent going back to a hard-coded version: it said
+    "Corpus/0.1" through 0.4.2, so an API operator could not tell
+    releases apart when contacting the mailto about traffic."""
+    from _version import __version__
+    import _api_http
+    monkeypatch.setenv("CORPUS_MAILTO", "")
+    assert _api_http.corpus_user_agent() == f"Corpus/{__version__}"
+    monkeypatch.setenv("CORPUS_MAILTO", "a@b.org")
+    assert _api_http.corpus_user_agent() == f"Corpus/{__version__} (mailto:a@b.org)"

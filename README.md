@@ -10,6 +10,10 @@ Corpus © 2026 Jack Mostyn. Licensed under the GNU Affero General Public
 License v3.0 — see [LICENSE](LICENSE). Third-party components and their
 licences are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
+Corpus was built with AI assistance: much of its code was written with
+Claude (Anthropic's AI model, through Claude Code), directed and
+reviewed by the author.
+
 ## What it does
 
 - **Reads your PDFs**: DOI, title, authors, year, journal, pages,
@@ -34,6 +38,9 @@ Get the latest version from the [Releases](../../releases) page.
 > Windows version is built from the same code and has been run on
 > Windows, but it has not been tested as thoroughly — please report
 > anything that does not work there.
+>
+> Windows builds can lag behind: if the newest release has no Windows
+> zip, download it from the most recent release that does.
 
 **Mac** — download `Corpus-v<version>.zip`, unzip it, and drag
 `Corpus.app` into Applications. The first time you open it, macOS will
@@ -59,8 +66,9 @@ python3 -m venv .venv
 .venv/bin/python launcher.py
 ```
 
-Tests: `.venv/bin/python -m pytest tests/ -q` (and
-`node --test tests/src/*.test.js` for the frontend).
+Tests: install `requirements-dev.txt` instead, then
+`.venv/bin/python -m pytest tests/ -q` and
+`node --test tests/src/*.test.js` (frontend).
 
 To build the Windows app yourself, run `build_windows.bat` on Windows
 (it needs Python 3.11+ from python.org); the app appears in
@@ -74,6 +82,6 @@ and what happened instead. Screenshots help.
 ## For developers
 
 The code is plain Python (Flask) behind a native window (pywebview), and
-a vanilla-JavaScript frontend with no build step. `CODE_MAP.md` maps
-every feature to its files; `CONTRIBUTING.md` lists what a change must
-update; `TESTING.md` says what each test covers.
+a vanilla-JavaScript frontend with no build step. `CONTRIBUTING.md` shows
+where things are and what a change should include; `SECURITY.md` says how
+to report a security problem.

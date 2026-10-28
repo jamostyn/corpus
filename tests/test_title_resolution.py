@@ -1,7 +1,7 @@
 """Recovering papers whose DOI never resolved, by title.
 
-Jack, 2026-09-24: "i want to revisit whether it is feasible to get the
-cross ref, ss, or oa specific id from the title if the doi isnt found."
+Requirement (2026-09-24): get the Crossref, Semantic Scholar or OpenAlex
+id from the title when the DOI is not found.
 
 A read-only probe of the 11 corpus papers with `doi: unknown` answered it:
 with correct titles OpenAlex found 10, Semantic Scholar 9, Crossref 8 —
@@ -126,7 +126,7 @@ def test_a_one_word_fragment_is_never_searched(no_network):
 
 def test_openalex_is_searched_by_title_filter_not_free_text(monkeypatch):
     """Catches a switch to `search=`, which returns a confident top hit
-    even for titles OpenAlex does not hold (ROADMAP, 2026-08-26), and
+    even for titles OpenAlex does not hold (observed 2026-08-26), and
     catches a comma or colon in the title breaking the filter syntax."""
     urls = []
     title = "Challenge Point: A Framework for Conceptualizing Practice, in Motor Learning"

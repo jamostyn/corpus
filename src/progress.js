@@ -1,9 +1,8 @@
 // Live progress for long-running jobs.
 //
-// Jack, 2026-09-17, after a 25-paper import: "can you make sure that
-// the loading process is incredibly transparent so you can know what
-// step it is on, what function is being performed, and how much is
-// left." The log for that import shows `POST /api/scan` at 26.6s and
+// Requirement (2026-09-17, after a 25-paper import): the loading process
+// shows which step it is on, what is being performed, and how much is
+// left. The log for that import shows `POST /api/scan` at 26.6s and
 // the bridge search at 21.4s — about 48 seconds behind a single
 // "scanning corpus…" toast.
 //
@@ -20,15 +19,15 @@ window.Progress = (function () {
   const POLL_MS = 500;
   // How long to keep polling for a job the server has not reported yet.
   //
-  // Jack, 2026-09-21: "the importing papers progress thing only shows up
-  // if you hit scan a second time." The first poll fires the instant the
+  // Bug (2026-09-21): the import progress only showed on a second scan.
+  // The first poll fires the instant the
   // button is pressed and can reach the server BEFORE `progress.start()`
   // runs. It saw `active: false` and stopped polling for good. A second
   // press found the job already running, which is why that one worked.
   const START_GRACE_MS = 8000;
   // A finished banner is information for a few seconds, then clutter.
-  // "it doesnt go away when its done" — polling stopped with the banner
-  // still rendered, and nothing ever hid it.
+  // Previously polling stopped with the banner still rendered, and
+  // nothing ever hid it.
   const DONE_LINGER_MS = 4000;
   const ERROR_LINGER_MS = 15000;
   let timer = null;
@@ -41,8 +40,7 @@ window.Progress = (function () {
 
   /** 328.8 -> "5:28". Whole seconds, minutes after 60.
    *
-   *  Jack, 2026-09-22: "the position of the text showing the 1/6 keeps
-   *  shifting as the seconds tick up." Tenths of a second changed the
+   *  The step text used to shift as the seconds ticked up (2026-09-22). Tenths of a second changed the
    *  string's width ten times a second ("9.9s" -> "10.0s" is also one
    *  character longer), and the right-aligned meta line re-flowed each
    *  time. Whole seconds change once a second; with tabular digits
@@ -77,8 +75,8 @@ window.Progress = (function () {
       return;
     }
 
-    // Jack, 2026-09-22: "its still shifting the text as the characters
-    // change. make each text its own thing that is anchored."
+    // Each value is anchored in its own slot so text does not shift as
+    // characters change (2026-09-22).
     //
     // These three used to be joined into ONE right-aligned string. Any
     // one of them changing width — "9s" to "10s", "9/100" to "10/100",
@@ -94,7 +92,7 @@ window.Progress = (function () {
     const count = (p.total_units > 0) ? `${p.done_units}/${p.total_units}` : "";
     // Three levels, deliberately: the JOB (what you asked for), the
     // PHASE (which function is running), and the DETAIL (which file or
-    // paper it is on). Jack asked for all three by name.
+    // paper it is on). All three are named explicitly.
     el.innerHTML =
       `<div class="jp-line">` +
         `<span class="jp-job">${escHtml(p.job)}</span>` +

@@ -49,7 +49,7 @@ def openalex_search_by_title(title: str, year: int | None = None) -> dict | None
 
     Uses `filter=title.search:`, never `search=`: free-text search ranks
     over the whole record and returns a confident hit even for a title
-    OpenAlex does not have (ROADMAP, measured 2026-08-26). The hit must
+    OpenAlex does not have (measured 2026-08-26). The hit must
     still clear TITLE_MATCH_FLOOR against the query.
 
     Returns the FULL work payload, so `_from_openalex` can use it

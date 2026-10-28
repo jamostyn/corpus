@@ -14,7 +14,7 @@ MODES entry declares `searchFields`. These tests EXECUTE the real
 declarations: `modeRowMatches` and the `searchFields` arrows are pure,
 so they are extracted from app.js and run in node rather than asserted
 against as text. app.js as a whole cannot load in the vm harness (it
-needs a live DOM) — see TESTING.md § Known gaps.
+needs a live DOM).
 """
 from __future__ import annotations
 
@@ -122,7 +122,7 @@ _PAPER = {"slug": "schunn-2001", "author": "Schunn, C.", "year": 2001,
 def test_a_paper_is_findable_by_its_author():
     """Catches: dropping author from the paper search fields.
 
-    This is Jack's report. The author is not in the rendered label, so
+    This was the reported bug. The author is not in the rendered label, so
     any filter that reads the label alone fails here while every
     title-based test still passes."""
     assert _match("papers", _PAPER, "schunn") is True
@@ -324,7 +324,7 @@ def test_every_filter_box_shares_one_style_rule():
     and margin, missing the `padding` and `font: inherit` the sidebar
     boxes get. The result is a placeholder in the browser's default
     search font pressed against the border — legible enough to ship and
-    wrong enough to notice, which is how it survived until Jack's
+    wrong enough to notice, which is how it survived until a
     screenshot showed it clipped."""
     css = (_SRC / "styles.css").read_text(encoding="utf-8")
     m = re.search(r"((?:^\.[a-z-]+(?: input)?,\n)*^\.[a-z-]+(?: input)?) \{\n"

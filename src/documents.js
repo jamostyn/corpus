@@ -1,9 +1,8 @@
 // Corpus — Documents tab. Added 2026-09-25.
 //
-// Jack: "i want to add an another documents tab. for now i will just be
-// uploading a pdf of a book chapter. i dont want any fancy integrations
-// aside from all the text, highlight, and note features for the paper
-// pdfs. but none of the api stuff."
+// Requirement: a second documents tab for standalone PDFs such as a book
+// chapter. It gets the text, highlight, and note features of paper PDFs
+// but no API-backed enrichment.
 //
 // A document is a PDF with a title. The pane is the paper pane's PDF
 // view — `pdfPaneHtml` from app.js, the same viewer and anchored-note

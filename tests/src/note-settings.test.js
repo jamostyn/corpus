@@ -1,8 +1,7 @@
 // Tests for the note header's Settings dropdown (notes.js::_wireNoteSettings).
 //
-// Jack, 2026-09-29: "make the delete button on a note hidden behind a
-// settings button that opens a drop down with settings with and x to
-// close settings. only option there is delete for now".
+// Requirement (2026-09-29): delete sits behind a settings button that
+// opens a dropdown with a close control; delete is the only option for now.
 //
 // The real function is cut out of notes.js by marker and run against a
 // small fake DOM; the markup assertions read notes.js's template.
@@ -66,7 +65,7 @@ test("Settings opens the menu and toggles it closed again", () => {
 });
 
 test("the × closes the menu", () => {
-  // Catches the close button Jack asked for doing nothing.
+  // Catches the close button doing nothing.
   const t = setup();
   t.btn.click();
   t.close.click();

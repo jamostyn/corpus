@@ -8,8 +8,7 @@ corpus that happens to be empty.
 
 These are source-level assertions on `src/app.js` and `src/index.html`.
 The boot path lives in an async IIFE that needs `fetch`, the DOM and a
-running server, so the vm harness cannot execute it — see TESTING.md
-§ Known gaps. What IS checkable is that the two cases are still
+running server, so the vm harness cannot execute it. What IS checkable is that the two cases are still
 distinguished and that the path is still surfaced.
 """
 from __future__ import annotations
@@ -123,8 +122,8 @@ def test_scaffolding_docstring_matches_behaviour():
 
 # ---------- the loading state ----------
 #
-# Added 2026-09-20. Jack: "i just re ran the command and it forgot my
-# corpus location." Nothing had forgotten anything — `~/.corpus/config.json`
+# Added 2026-09-20. Symptom: after a relaunch the app seemed to forget the
+# corpus location. Nothing had forgotten anything — `~/.corpus/config.json`
 # was correct and untouched. The pane simply started on the no-corpus
 # copy and `boot()` cannot reach a conclusion until `loadPapers()`
 # returns, which on a cold 209-summary corpus measured ~20s (5.4 MB,

@@ -1,8 +1,7 @@
 // Corpus — sorting a list by one of its tab's declared sort options.
 //
-// Jack, 2026-09-28: "when i link a paper to a note, i want to be able to
-// change what is being sorted by for all the options. so i can sort by
-// most recent added papers for example."
+// Requirement (2026-09-28): the note link picker can sort by any of the
+// tab's options, for example most recently added papers first.
 //
 // Each tab declares its options once, as `sorts` on its MODES entry in
 // app.js: [{ key, label, value: (row) => …, numeric?, defaultDir? }].

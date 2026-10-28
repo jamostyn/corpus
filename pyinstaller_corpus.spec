@@ -74,7 +74,9 @@ a = Analysis(
     # tweaks that launcher.py + server.py do at runtime.
     pathex=['python', 'python/extract'],
     binaries=[],
-    datas=_collect_frontend('src'),
+    # LICENSE + notices travel inside the app (AGPL: a copy of the licence
+    # goes with every copy of the program). They land in the bundle root.
+    datas=_collect_frontend('src') + [('LICENSE', '.'), ('THIRD_PARTY_NOTICES.md', '.')],
     hiddenimports=[
         # ----- Extract-pipeline modules -----
         # These use bare-name imports (`from _api_http import ...`) which
@@ -124,6 +126,14 @@ a = Analysis(
         # already outside pathex, but excluding here catches transitive
         # imports too).
         'dev_only',
+        # The extractor benchmark's stack (requirements-bench.txt). It
+        # lives in dev/.venv-bench, never the build venv; listed here so
+        # a stray install there still cannot ride into the app. The
+        # pymupdf-layout wheel installs INTO the pymupdf package
+        # (pymupdf/layout, features, tgif — checked in its RECORD
+        # 2026-10-21); there is no top-level `pymupdf_layout` module.
+        'pymupdf4llm', 'pymupdf.layout', 'pymupdf.features', 'pymupdf.tgif',
+        'onnxruntime',
         # Test-only dep (PyYAML per requirements.txt: "used by tests").
         'yaml',
         # Anything a shipped user won't need.

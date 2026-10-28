@@ -1,6 +1,6 @@
 """Logging must not touch shipped builds.
 
-Per Jack's ask (2026-08-16): the entire `corpus.*` logger tree is
+Requirement (2026-08-16): the entire `corpus.*` logger tree is
 dev-only. In shipped builds it's fully disabled — no log file, no
 event logs, no per-request access log — regardless of what code
 calls `logger.info(...)`. Tests here verify both branches.

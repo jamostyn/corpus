@@ -1,17 +1,15 @@
 """The detached note workspace — note left, PDF right, highlight links.
 
-Jack, 2026-09-21: "i want to be able to pop out notes to occupy the
-full screen like i can for papers … a button … to pop out a panel that
-shows the pdfs (if any) tagged in this note … when you click on a link
-to a paper in fullscreen note mode instead of bringing you to the
-paper, it makes that paper be in view for the panel … a new button …
-links to a specific highlight … so if you click the linked full quote
-in the note, it brings up that paper and scrolls to that highlight"
+Requirements (2026-09-21): a note pops out to fill the window, as papers
+do; a panel beside it shows the PDFs tagged in the note; clicking a
+paper link in the note shows that paper in the panel instead of
+navigating the main window; a link to a specific highlight brings up
+that paper and scrolls to the highlight.
 
 Four parts, four groups of tests below. The detached-key parsing is
 pure, so it is EXTRACTED from app.js and executed in node; the rest are
 source-level, because the workspace needs a live DOM, a popped-out
-window and a PDF.js iframe (see TESTING.md § Known gaps).
+window and a PDF.js iframe.
 """
 from __future__ import annotations
 
@@ -244,7 +242,7 @@ def test_a_missed_pick_click_stays_armed():
 # "Scrolling to an unknown highlight does not jump" used to live here as a
 # check for the literal line `if (!el) return false;`. That line was the
 # bug — it also gave up on every highlight whose page was not rendered
-# yet (Jack, 2026-09-22). The behaviour is now tested for real, against
+# yet (2026-09-22). The behaviour is now tested for real, against
 # the viewer's actual functions, in tests/src/highlight-scroll.test.js
 # ("an erased highlight does not move the viewer").
 

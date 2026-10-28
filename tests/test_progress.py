@@ -1,9 +1,8 @@
 """The shared progress channel, and auto-bridges after an import.
 
-Jack, 2026-09-17: "whenever new papers are added can you automatically
-search for bridges? and can you make sure that the loading process is
-incredibly transparent so you can know what step it is on, what
-function is being performed, and how much is left."
+Requirement (2026-09-17): search for bridges automatically whenever new
+papers are added, and make the loading process transparent: which step
+it is on, what is being performed, and how much is left.
 
 The second half is what makes the first half acceptable. Auto-running
 the bridge search was DECLINED on 2026-09-14 — and recorded as
@@ -50,8 +49,8 @@ def test_an_idle_server_reports_inactive(client, corpus_dir):
 
 
 def test_a_running_job_reports_phase_detail_and_counts():
-    """Catches: dropping any of the three levels Jack asked for by
-    name — which step (phase index), what function (phase), and how
+    """Catches: dropping any of the three levels the requirement
+    names — which step (phase index), what function (phase), and how
     much is left (done/total)."""
     job = progress.start("Importing papers", ["Reading PDFs", "Finding bridges"])
     job.step("Reading PDFs", "smith-2020.pdf", 3, 25)
@@ -254,7 +253,7 @@ def test_a_failed_bridge_search_does_not_look_like_a_failed_import(corpus_dir, m
 # ---------- 2026-09-22: citers fetched on every import ----------
 
 def test_an_import_fetches_citers_for_what_it_added_before_bridges(corpus_dir, monkeypatch, _no_citer_network):
-    """Catches the request not being met: Jack asked that citers be
+    """Catches the requirement not being met: citers are
     fetched by default on import. Also catches fetching the WHOLE corpus
     on each import (~3,000 requests) instead of just the added papers,
     and running the bridge search first (it is next in line to use them)."""
@@ -306,8 +305,8 @@ def test_both_import_routes_build_their_phases_from_one_definition():
 # ---------- 2026-09-22: one import at a time, and owned writes ----------
 
 def test_a_second_import_is_refused_while_one_is_running(client, corpus_dir):
-    """Catches the bug Jack reported: "for the last batch it kept jumping
-    between 100 and 98 papers total".
+    """Catches the reported bug where the total jumped
+    between 100 and 98 papers during one batch.
 
     server.log shows two scans of the same inbox finishing two seconds
     apart (added=64 and added=37). Each had counted the inbox at a

@@ -13,7 +13,7 @@ there was judged "overlapping" and deleted.
 
 Every other test of `corpus-highlights.js` is a source-level assertion,
 because the file is an IIFE needing a live text layer (see
-`test_highlight_erase_mode.py` and TESTING.md § Known gaps). These two
+`test_highlight_erase_mode.py`). These two
 functions are the exception: they are PURE geometry over plain objects.
 So this file EXTRACTS them from the real source and runs them in node
 against real coordinates. It is the only behavioural coverage of that
@@ -91,7 +91,7 @@ _EXISTING = [{"id": "a", "page": 1, "rects": [_r(0.10, _L1[0], 0.90, _L1[1]),
 def test_the_reported_bug_a_later_span_on_the_same_line_is_untouched():
     """Catches: reverting to a bounding-box overlap test.
 
-    This is Jack's exact report. The new selection starts to the RIGHT
+    This is the reported case. The new selection starts to the RIGHT
     of where the old highlight ended on line 2 and runs into line 3. Its
     bounding box covers the old highlight's line-2 rect; its actual
     glyph rects do not. Nothing may be deleted."""

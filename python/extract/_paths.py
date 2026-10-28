@@ -127,8 +127,8 @@ def is_corpus_source_tree(path: str | Path) -> bool:
     track empty directories, so `git status` stays clean and nothing
     reports the mistake. The app meanwhile shows an empty corpus.
 
-    This has happened twice. On 2026-09-09 `corpus_dir` pointed at a
-    Paper Machine folder of 4288 unrelated files; on 2026-09-17 it
+    This has happened twice. On 2026-09-09 `corpus_dir` pointed at an
+    unrelated folder of 4288 files; on 2026-09-17 it
     pointed at `corpus/dev` itself, and three empty directories sat in
     the repo until someone looked for them. The first fix only made the
     symptom legible (the empty state now names the configured path) —
@@ -170,7 +170,7 @@ def citers_dir() -> Path:
     """Every known citer of each paper, fetched from OpenAlex on demand.
 
     One file per paper (`<slug>.json`). Sized 2026-09-22: the most-cited
-    paper in Jack's corpus (PRISMA 2020) has ~105k citers; DOIs alone are
+    paper in a real library (PRISMA 2020) has ~105k citers; DOIs alone are
     ~3 MB and the stored rows carry titles too.
 
     A sidecar, never frontmatter, for two reasons: re-extract drops
@@ -189,7 +189,7 @@ def documents_dir() -> Path:
     `highlights.json`. Deliberately NOT under papers/ or summaries/:
     everything there is swept by Scan's backfill, the citation index,
     citers and the bridge search, and a document gets none of that
-    (Jack, 2026-09-25: "none of the api stuff"). A folder per document
+    (documents never trigger online lookups). A folder per document
     keeps each one self-contained, so removing one later is one delete.
     Not created by `ensure_corpus_layout` — it appears on first upload."""
     d = corpus_root() / "documents"

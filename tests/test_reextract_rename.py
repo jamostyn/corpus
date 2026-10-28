@@ -1,7 +1,7 @@
 """Re-extract must never strand a paper's highlights, projects or links.
 
-2026-09-21, 16:18:46: Re-extract on `pan-2025-1` (Jack's main working
-paper) resolved a canonical slug of `pan-2025` and renamed the PDF and
+2026-09-21, 16:18:46: Re-extract on `pan-2025-1`
+resolved a canonical slug of `pan-2025` and renamed the PDF and
 summary — only. 177 highlights, its project membership and every note
 link stayed keyed to `pan-2025-1`, and the note workspace reported
 "none of the pdfs are loading here". The data was repaired by hand.

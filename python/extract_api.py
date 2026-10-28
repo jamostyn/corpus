@@ -68,7 +68,7 @@ def _resolve_slug_collision(canon: str, doi: str) -> str:
         corpus) versus its single-slash form, same problem.
 
     The last two are how duplicate-DOI pairs get created, which is a
-    known open issue in ROADMAP.
+    known open issue.
     """
     from _fm import parse_frontmatter
     existing = summaries_dir() / f"{canon}.md"
@@ -231,11 +231,10 @@ def import_phases(reading: list[str]) -> list[str]:
 def _after_import(slugs: list[str], job: "progress.Job | None" = None) -> None:
     """Fetch citers for the papers just added, then recompute bridges.
 
-    Citers first. Jack, 2026-09-22: "if its not the default to fetch that
-    when a paper is imported, make it so." Only the ADDED papers are
-    fetched — the whole corpus is ~3,000 requests. Citers come before the
-    bridge search because the bridge search is next in line to use them
-    (ROADMAP "Stored citers → bridge search"); today it does not.
+    Citers first: fetching on import is the default. Only the ADDED
+    papers are fetched — the whole corpus is ~3,000 requests. Citers come
+    before the bridge search because the bridge search is next in line to
+    use them; today it does not.
 
     Both steps report into the import's own progress job. A citer fetch
     that fails does not stop the bridge search, and neither makes the
@@ -254,11 +253,9 @@ def _after_import(slugs: list[str], job: "progress.Job | None" = None) -> None:
     progress job the scan started, so the UI shows one continuous
     sequence rather than appearing to finish and then start again.
 
-    Jack asked for this on 2026-09-17. It was previously declined (and
-    recorded in ROADMAP as declined) because a silent ~40s network call
-    hanging off Add PDFs is a bad trade. What changed is that the same
-    request asked for visible progress, which is exactly the thing that
-    made it a bad trade.
+    Added 2026-09-17. It was previously declined because a silent ~40s
+    network call hanging off Add PDFs is a bad trade; visible progress
+    removes that objection.
     """
     slugs = [s for s in (slugs or []) if s]
     if not slugs:
@@ -363,7 +360,7 @@ def re_extract(slug):
     final_slug = slug
     renamed = False
     # Never rename for a collision suffix alone (`pan-2025-1` → `pan-2025`).
-    # That is how Jack's working paper was renamed on 2026-09-21 — see
+    # That is how a paper was wrongly renamed on 2026-09-21 — see
     # slug_migration.differs_only_by_suffix for why the suffix stays.
     if canon and canon != slug and not differs_only_by_suffix(canon, slug):
         candidate = _resolve_slug_collision(canon, meta.get("doi") or "")
@@ -417,7 +414,7 @@ def scan():
     job = progress.start("Importing papers",
                          import_phases(["Reading PDFs", "Backfilling summaries"]))
     if job is None:
-        # Jack, 2026-09-22: a second Scan landing during an import made
+        # 2026-09-22: a second Scan landing during an import made
         # the total alternate between the two inbox counts (100 and 98).
         # Both scans also raced over the same files. One at a time.
         return jsonify(_BUSY), 409

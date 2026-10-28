@@ -1,8 +1,7 @@
 """The note link picker can sort every kind of thing it links to.
 
-Jack, 2026-09-28: "when i link a paper to a note, i want to be able to
-change what is being sorted by for all the options. so i can sort by most
-recent added papers for example."
+Requirement (2026-09-28): the note link picker can sort by any of the
+tab's options, for example most recently added papers first.
 
 Sort options are declared once per tab (`sorts` on its MODES entry) and
 used by both the Papers sidebar and the picker via src/sorting.js; the
@@ -31,7 +30,7 @@ def test_every_linkable_type_declares_sort_options():
 
 
 def test_papers_offer_date_added_newest_first():
-    """Catches losing the example Jack gave."""
+    """Catches losing the date-added, newest-first option."""
     papers = next(e for e in _modes_entries() if e.startswith('"papers"'))
     assert re.search(r'key: "added_at".*defaultDir: "desc"', papers)
 

@@ -1,9 +1,8 @@
 """Stored citers: fetch, store, and the in-corpus / elsewhere split.
 
-Jack, 2026-09-22: "implement a storage for the citers of each paper.
-integrate it into the info panel and have clear distinctions like for
-references about which citers are in the corpus. dont integrate the
-citers list into any kind of bridge finder yet."
+Requirement (2026-09-22): store the citers of each paper, show them in
+the info panel with a clear in-corpus / elsewhere distinction like the
+references, and keep the citers list out of the bridge finder for now.
 
 OpenAlex is stubbed throughout — nothing here touches the network.
 """
@@ -60,7 +59,7 @@ def test_before_fetching_the_panel_is_told_nothing_is_stored(client, corpus_dir)
 
 
 def test_citers_are_split_into_in_corpus_and_elsewhere(client, corpus_dir, stub_openalex):
-    """Catches the distinction Jack asked for being wrong or missing: a
+    """Catches the in-corpus / elsewhere distinction being wrong or missing: a
     citer whose DOI is a corpus paper must come back linked to its slug,
     and every other citer must not."""
     _summary(corpus_dir, "target-2020", "10.1/target")
@@ -159,9 +158,9 @@ def test_the_bridge_search_reads_the_store_instead_of_refetching(client, corpus_
     """Catches the bridge search going back to the network for citers it
     already has on disk.
 
-    Jack cleared this on 2026-09-23 ("cache the results so it doesnt need
-    to redo this stuff every time") — it had been deliberately kept apart
-    until then. The measured cost of the redo: 935 paginated requests and
+    Reusing the store was approved on 2026-09-23 (results are cached so
+    the work is not redone each time) — it had been deliberately kept
+    apart until then. The measured cost of the redo: 935 paginated requests and
     26.6 minutes per import, for data the citer store already held."""
     import bridges_api
     _summary(corpus_dir, "target-2020", "10.1/target")
@@ -311,7 +310,7 @@ def test_the_paper_panel_is_told_whether_citers_are_stored(client, corpus_dir, s
     """Catches the Coverage table's citer row going blind again: its
     OpenAlex cell reads `stores.citers` from /api/paper/<slug>. If the
     flag stops tracking the file, the row reads ✗ (or ✓) on every paper
-    regardless of what is stored — the same staleness Jack reported."""
+    regardless of what is stored — the same staleness that was reported."""
     _summary(corpus_dir, "target-2020", "10.1/target")
     assert client.get("/api/paper/target-2020").get_json()["stores"]["citers"] is False
     stub_openalex["pages"] = [[_work("W2", "10.9/x")]]

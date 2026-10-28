@@ -1,10 +1,8 @@
 """One progress channel for every long-running job.
 
-Jack, 2026-09-17, after watching a 25-paper import: "can you make sure
-that the loading process is incredibly transparent so you can know what
-step it is on, what function is being performed, and how much is left."
-
-He was not exaggerating the problem. The log for that import shows
+Requirement: a long import must show which step is running, what is
+being done, and how much is left. The log for a 25-paper import
+(2026-09-17) shows
 `POST /api/scan` taking 26.6s and the bridge search another 21.4s —
 roughly 48 seconds during which the UI said "scanning corpus…" once
 and then nothing at all.
@@ -64,8 +62,8 @@ def _now() -> float:
 class Job:
     """A handle on the running job. The ONLY way to write progress.
 
-    Jack, 2026-09-22: during a 100-paper import "it kept jumping between
-    100 and 98 papers total". Two scans were running at once (server.log,
+    Observed 2026-09-22: during a 100-paper import the total jumped
+    between 100 and 98. Two scans were running at once (server.log,
     16:49:34 added=64 and 16:49:36 added=37): each had counted the inbox
     at a different moment, and both wrote their own count into the one
     shared slot, so the total alternated.

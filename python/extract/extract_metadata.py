@@ -25,8 +25,8 @@ Delegates:
   * Shared HTTP + text-similarity helpers to _api_http.
 
 Usage:
-  python3 scripts/extract_metadata.py papers/whittington-2020.pdf
-  python3 scripts/extract_metadata.py papers/whittington-2020.pdf --json
+  python3 extract_metadata.py papers/whittington-2020.pdf
+  python3 extract_metadata.py papers/whittington-2020.pdf --json
 """
 
 from __future__ import annotations

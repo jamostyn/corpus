@@ -2,8 +2,7 @@
 // (notes.js::noteScrollAnchor / restoreNoteScrollAnchor, and the URL
 // hand-off in app.js::openDetached / _readDetachedHash).
 //
-// Jack, 2026-09-29: "when i pop out a note i lose my place where i was
-// scrolling." The pop-out is a new window, a different width, that loaded
+// Bug (2026-09-29): popping out a note lost the scroll position. The pop-out is a new window, a different width, that loaded
 // the note at the top.
 
 const { test } = require("node:test");

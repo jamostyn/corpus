@@ -514,7 +514,7 @@ def _aggregate_authors() -> dict:
 
     # Serializable cleanup — Counter → dict, set → list.
     # Dedupe papers by DOI: two summaries with the same DOI (usually
-    # because Jack has one PDF slugged twice while cleaning up a rename)
+    # because one PDF was slugged twice while cleaning up a rename)
     # would otherwise show as duplicate entries in the author's paper
     # list. Keep the first occurrence per DOI. Slugs without a DOI
     # (unknown / preprint / etc.) can't dedupe — they stay as-is.

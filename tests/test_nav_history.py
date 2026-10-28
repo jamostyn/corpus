@@ -1,7 +1,7 @@
 """Back / forward navigation.
 
-Jack, 2026-09-21: "can you add back and forward arrows somewhere up
-here so you can navigate easily between different places?"
+Requirement (2026-09-21): back and forward arrows navigate between
+previously visited places.
 
 A "place" is {mode, id} — the pair every navigation already produces,
 since each MODES entry declares the state key holding its selection.
@@ -14,7 +14,7 @@ the project member list — five copies of the same rule, which is how
 
 `_currentPlace` and `_recordPlace` are pure over `state`, so they are
 EXTRACTED from app.js and executed in node rather than asserted as
-text. app.js as a whole needs a live DOM (see TESTING.md § Known gaps).
+text. app.js as a whole needs a live DOM.
 """
 from __future__ import annotations
 

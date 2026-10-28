@@ -20,8 +20,8 @@ sys.path.insert(0, str(_DEV_ROOT / "python" / "extract"))
 def scratch_config(tmp_path, monkeypatch):
     """Point config_api at a throwaway config file for EVERY test.
 
-    autouse, because the protection has to be structural. CLAUDE.md has
-    always promised "tests never touch that path", and `config_api`
+    autouse, because the protection has to be structural. The project
+    has always promised that tests never touch that path, and `config_api`
     has always carried a `CORPUS_CONFIG_PATH` override commented "so
     tests can point at a scratch file instead of stomping on the real
     user's ~/.corpus/config.json" — but nothing used it, so the promise
@@ -31,9 +31,8 @@ def scratch_config(tmp_path, monkeypatch):
     tree_is_refused` POSTed to /api/config without redirecting the
     path. That is harmless while the guard it tests is working, and the
     moment the guard was mutated away to check the test had teeth, the
-    POST succeeded and wrote `corpus/dev` into Jack's real config —
-    silently undoing the corpus directory he had just asked to have
-    set.
+    POST succeeded and wrote `corpus/dev` into the user's real config —
+    silently undoing the corpus directory just set.
 
     Returns the scratch path so tests that need to inspect what was
     written can read it."""

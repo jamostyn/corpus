@@ -2,8 +2,7 @@
 // one sandbox with a permissive stub DOM, run boot(), and assert it gets
 // as far as loading the papers.
 //
-// Jack, 2026-09-21: "when i clicked pop out on a note it is completely
-// blank." The server log showed both windows fetching /api/config and
+// Bug (2026-09-21): popping out a note showed a blank window. The server log showed both windows fetching /api/config and
 // /api/tooltips after a restart and then nothing — not even the main
 // window requested /api/papers. Startup was throwing, and no test loaded
 // the scripts together, so nothing caught it.

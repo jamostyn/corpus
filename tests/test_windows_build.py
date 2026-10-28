@@ -8,7 +8,6 @@ context. These tests check the contract here instead.
 
 NOT COVERED, and it cannot be from macOS: whether `build_windows.bat`
 actually produces a working Corpus.exe. That needs a Windows machine.
-See TESTING.md § Known gaps.
 """
 from __future__ import annotations
 
@@ -179,7 +178,7 @@ def test_bundle_carries_the_pdf_viewer_modules(staged):
     `build` was in the prune set (meant for PyInstaller output) and
     matched `src/vendor/pdfjs/build/` by name, so v0.2.0–v0.4.1 shipped
     without pdf.mjs and its worker. The app built and opened; only the
-    viewer was dead, reporting `pdf.mjs: HTTP 404` (Jack, Windows,
+    viewer was dead, reporting `pdf.mjs: HTTP 404` (seen on Windows,
     2026-10-15)."""
     files = _rel_files(staged)
     needed = _pdfjs_runtime_files()
@@ -284,3 +283,15 @@ def test_batch_file_uses_the_shipped_requirements_not_a_hardcoded_list():
     bat = (_DEV / "build_windows.bat").read_text(encoding="utf-8")
     assert "-r requirements.txt" in bat
     assert "-r requirements-build.txt" in bat
+
+
+def test_the_ship_readme_gives_the_same_mac_first_launch_step_as_the_readme(tmp_path, monkeypatch):
+    """Catches the ship README.txt telling testers "right-click -> Open",
+    which current macOS no longer offers for an unsigned app, while
+    README.md says System Settings -> Open Anyway."""
+    bs = _load_build_ship()
+    monkeypatch.setattr(bs, "SHIP_ROOT", tmp_path)
+    bs._write_ship_readme("9.9.9")
+    ship = (tmp_path / "README.txt").read_text(encoding="utf-8")
+    assert "Open Anyway" in ship and "right-click" not in ship.lower()
+    assert "Open Anyway" in (_DEV / "README.md").read_text(encoding="utf-8")

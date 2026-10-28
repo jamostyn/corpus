@@ -99,8 +99,8 @@ def test_explicit_null_note_is_treated_as_absent(client, corpus_dir):
 def test_long_note_is_not_truncated(client, corpus_dir):
     """Catches: someone adding a length cap to notes.
 
-    Jack specified explicitly that anchored notes have no length
-    limit (one note per highlight, unbounded). A cap added for
+    Anchored notes have no length
+    limit by specification (one note per highlight, unbounded). A cap added for
     "safety" would silently truncate a user's longest notes."""
     long_note = "x" * 50_000
     client.post("/api/paper/smith-2023/highlights",

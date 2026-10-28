@@ -70,7 +70,7 @@ app = Flask(__name__, static_folder=str(_SRC), static_url_path="")
 # worker are ES modules, and a module served as anything but JavaScript
 # is rejected outright. Classic scripts (the whole main app) still run
 # under `text/plain`, so the failure shows up ONLY as a PDF viewer with a
-# toolbar and no pages (Jack, Windows, 2026-09-29).
+# toolbar and no pages (seen on Windows, 2026-09-29).
 #
 # Pinned here so the answer never depends on the machine. `add_type`
 # initialises the table (registry included) first and then overrides, so
@@ -99,7 +99,7 @@ pin_web_mime_types()
 # ---------- Dev mode detection ----------
 #
 # `python/dev_only/` and `src/dev_only/` exist ONLY in the dev repo.
-# The sync-to-ship script strips both directories on release, so
+# Release builds strip both directories, so
 # their presence is a reliable signal of a dev vs shipped build.
 # Anything that should be developer-only (bug reporter, planning
 # modal, tooltip editor, LOGGING) is gated on this.
@@ -162,7 +162,7 @@ app.register_blueprint(progress.progress_bp)
 
 # ---------- Dev-only surfaces ----------
 #
-# Only present on disk in dev builds — the sync-to-ship script strips
+# Only present on disk in dev builds — release builds strip
 # both python/dev_only/ and src/dev_only/. `IS_DEV` = presence check.
 # In a shipped build:
 #   - the dev_only Python package isn't importable → this block no-ops

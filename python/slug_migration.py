@@ -2,8 +2,8 @@
 
 WHY THIS EXISTS
 ---------------
-2026-09-21, 16:18:46: Jack pressed Re-extract on `pan-2025-1`, his main
-working paper. The resolved metadata said its canonical slug was
+2026-09-21, 16:18:46: Re-extract on `pan-2025-1` (a user's main
+working paper). The resolved metadata said its canonical slug was
 `pan-2025`, so `re_extract` moved the PDF and the summary — and nothing
 else. Five other stores key a paper by its slug, and all of them were
 left pointing at a name that no longer existed:
@@ -15,8 +15,8 @@ left pointing at a name that no longer existed:
     notes/*.json                every `data-open-paper` link, now a 404
     bridges/index.json          cached bridge rows (self-heals on recompute)
 
-The first sign was "none of the pdfs are loading here" from the note
-workspace — the note's paper links all resolved to a missing slug.
+The first sign was PDFs failing to load in the note workspace — the
+note's paper links all resolved to a missing slug.
 
 A rename that moves the file but not its dependents is not a rename. This
 module is the ONE list of what a slug owns, so the next store added gets
@@ -133,6 +133,6 @@ def differs_only_by_suffix(a: str, b: str) -> bool:
     Re-extract must not rename for this alone. The suffix records that a
     same-author-same-year paper existed at import time; dropping it later
     changes the paper's identity for a purely cosmetic reason, and it is
-    how Jack's working paper was renamed out from under him.
+    how a paper was renamed out from under its user.
     """
     return _SUFFIX.sub("", a) == _SUFFIX.sub("", b)

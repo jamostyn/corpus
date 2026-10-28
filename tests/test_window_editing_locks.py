@@ -1,13 +1,13 @@
 """One editor per paper and per note, across windows — plus the viewer URL.
 
-Jack filed these on 2026-09-21 from the note workspace:
+Three bugs reported on 2026-09-21 from the note workspace:
 
-  * "theres an error where the note can be open in pop out and the normal
-    view. fix this to prevent editing over anything"
-  * "when a paper is open here it also shouldnt be able to be opened in
-    another window to prevent double editing"
-  * "the table of contents starts out open when i clicked on the paper
-    link here. it should always start closed"
+  * A note could be open in a pop-out and the main window at once, so two
+    editors autosaved over each other.
+  * A paper open in one window could also be opened in another, allowing
+    double editing.
+  * The PDF table of contents started out open; it should always start
+    closed.
 
 The window lock for papers lives in launcher.py's _Bridge because it is
 the only process that sees every window; that part gets real behavioural
@@ -167,22 +167,3 @@ def test_the_viewer_starts_with_its_sidebar_closed():
     fn = app[app.index("function pdfViewerSrc"):app.index("window.pdfViewerSrc")]
     assert "pagemode=none" in fn
 
-
-# ---------- the bug reporter's screenshot ----------
-
-def test_bug_reporter_never_asks_for_a_canvas_webkit_will_refuse():
-    """Catches the 0-byte screenshot (report 20260921-162029): un-clipping
-    a ~600-row sidebar made the capture taller than WebKit's canvas limit."""
-    br = _js("dev_only/bug-reporter.js")
-    unclip = br[br.index("const scrollables = ["):]
-    unclip = unclip[:unclip.index("].filter(Boolean)")]
-    assert ".sidebar" not in unclip
-    assert "MAX_CANVAS_DIM" in br and "scale," in br
-
-
-def test_bug_reporter_refuses_to_file_an_empty_screenshot():
-    """Catches saving "data:," as a screenshot again."""
-    br = _js("dev_only/bug-reporter.js")
-    assert 'canvas.toDataURL("image/png").length < 100' in br
-    after = br[br.index("if (!canvas) {"):]
-    assert after.index("return;") < after.index("openModal(canvas)")

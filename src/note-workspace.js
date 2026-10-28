@@ -1,13 +1,10 @@
 // Detached note workspace — the note on the left, a PDF on the right.
 //
-// Jack, 2026-09-21: "i want to be able to pop out notes to occupy the
-// full screen like i can for papers … a button somewhere around there
-// to pop out a panel that shows the pdfs (if any) tagged in this note
-// … when you click on a link to a paper in fullscreen note mode
-// instead of bringing you to the paper, it makes that paper be in view
-// for the panel … a new button that links to a specific highlight …
-// so if you click the linked full quote in the note, it brings up that
-// paper and scrolls to that highlight"
+// Requirements (2026-09-21): a note pops out to fill the window, as papers
+// do; a panel beside it shows the PDFs tagged in the note; clicking a
+// paper link in the note shows that paper in the panel instead of
+// navigating the main window; a link to a specific highlight brings up
+// that paper and scrolls to the highlight.
 //
 // This module runs ONLY in a popped-out note window
 // (`body.corpus-detached-note`). The docked Notes tab is untouched —
@@ -124,12 +121,11 @@ window.NoteWorkspace = (function () {
 
   // ---------- Info / PDF switch ------------------------------------
   //
-  // Jack, 2026-09-21: "i want to be able to switch between info tab and
-  // the pdf view here." The info view is the FULL paper view, rendered
+  // The panel switches between an info tab and the PDF view. The info
+  // view is the FULL paper view, rendered
   // by paper-detail.js's `renderPaperInto` — the same renderer as the
   // main pane. It was a compact copy (title, authors, year, venue, DOI,
-  // abstract) until Jack's bug report of 2026-09-25: "i should be able
-  // to see all the paper info here. not just this limited info". The PDF
+  // abstract) until 2026-09-25, when it was changed to show all paper info. The PDF
   // iframe is hidden, never destroyed, so switching back keeps the
   // reading position.
 
@@ -194,7 +190,7 @@ window.NoteWorkspace = (function () {
   // jumps to the highlight's page once, and ignores repeats of a scroll
   // it has just completed. The previous version stopped after ~1.2s and
   // three sends — often before the viewer had loaded at all, which is
-  // half of why highlight links landed on page 1 (Jack, 2026-09-22).
+  // half of why highlight links landed on page 1 (2026-09-22).
   const _SCROLL_RESENDS = 15;
   function _scrollWhenReady(highlightId, tries) {
     const left = tries == null ? _SCROLL_RESENDS : tries;

@@ -1,0 +1,6 @@
+# Everything needed to run the test suites: the app's own requirements
+# plus the test runner. Install with:
+#   .venv/bin/pip install -r requirements-dev.txt
+
+-r requirements.txt
+pytest>=8.0

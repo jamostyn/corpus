@@ -36,7 +36,7 @@ absent.
 
 Measured cost of the omission (57-paper corpus, 2026-08-25): 3 edges,
 22 vs 25. Closing it needs a "read every PDF" pass so the cache is
-complete before the index runs — tracked in ROADMAP.md.
+complete before the index runs.
 
 ## Cost
 

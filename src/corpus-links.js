@@ -10,7 +10,6 @@
 // because it only showed up when a list was empty.
 //
 // Depends at call-time on `escHtml` / `escAttr` from app.js.
-// See CODE_MAP.md § "Intra-corpus citation links".
 
 window.CorpusLinks = (function () {
 
@@ -97,7 +96,7 @@ window.CorpusLinks = (function () {
     const ms = (row.middles || []).map(id => middles[id]).filter(Boolean);
     const n = (row.middles || []).length;
     // The hop count is the headline: "2 hops" is the length of the
-    // bridge, which is what Jack asked to see alongside the papers.
+    // bridge, shown alongside the papers.
     const head =
       `<div class="pd-bridge-head">` +
       `<a href="#" data-open-paper="${escAttr(row.other)}">${escHtml(titleFor(row.other))}</a>` +

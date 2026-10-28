@@ -77,7 +77,7 @@ def test_the_snapshot_is_taken_in_exactly_one_place():
 def test_undo_is_single_level():
     """Catches: undo growing a stack, or becoming re-appliable.
 
-    Jack asked for the last action only. `undoLast` must clear the
+    Only the last action is undoable. `undoLast` must clear the
     snapshot after applying it, or pressing Undo twice reverts a second,
     older action the user never asked about."""
     src = _src()

@@ -1,7 +1,7 @@
 """The paper pane's "Add to project" button, and what it depends on.
 
-Jack, 2026-09-21: "can you add a button somewhere in the paper view up
-here to add a paper to a project."
+Requirement (2026-09-21): a button in the paper view header adds the
+paper to a project.
 
 Membership was only editable from the project side. The reverse entry
 point crosses three boundaries, and every one of them fails SILENTLY —
@@ -16,7 +16,7 @@ the button is still there, still clickable, and nothing happens:
 
 These are source assertions, not behaviour: projects.js needs a real
 DOM and a live `api()`. What they buy is that a rename on one side of
-any of those three seams shows up here instead of in Jack's hands.
+any of those three seams shows up here instead of in use.
 """
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def test_the_paper_pane_renders_and_wires_the_button():
     src = _read(_PAPER_DETAIL)
     assert 'id="btn-add-to-project"' in src, "button not rendered"
     assert 'q("#btn-add-to-project")' in src, "button never looked up"
-    # Rendered inside the header action group Jack pointed at, not
+    # Rendered inside the header action group, not
     # somewhere further down the pane.
     head = src[src.index('class="pd-head-actions"'):]
     head = head[:head.index("</div>")]

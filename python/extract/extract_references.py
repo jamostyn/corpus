@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """References for a paper — API-only (Crossref).
 
-v0.1 policy (per Jack, 2026-08-07): no PDF text parsing. References come
+v0.1 policy (2026-08-07): no PDF text parsing. References come
 exclusively from Crossref's `/works/{DOI}` response, `message.reference[]`.
 
 When Crossref has the refs (deposited by the publisher during metadata

@@ -191,9 +191,8 @@ def compute_bridges_now(job: "progress.Job | None" = None) -> dict | None:
     # after an import that is none of them, because the import fetches
     # citers for what it added before this runs.
     #
-    # Jack: "can you cache the results so it doesnt need to redo this
-    # stuff every time?" This was the redo: ~935 requests and ~16
-    # minutes per import for data already on disk.
+    # Results are cached because re-fetching was the cost: ~935 requests
+    # and ~16 minutes per import for data already on disk.
     #
     # The store is a snapshot, so a paper cited since its fetch is
     # missing until that paper's citers are refetched. Stated because it
@@ -203,8 +202,8 @@ def compute_bridges_now(job: "progress.Job | None" = None) -> dict | None:
     # Pass 1: everything the citer store already answers, via an index
     # that only re-reads stores which changed since the last run (see
     # `citers.citer_ids_for`). Progress counts only the stores actually
-    # read — Jack, 2026-09-24: "even tho it has most citers stored, it
-    # still loops through them".
+    # read (observed 2026-09-24: the loop re-read stores that were
+    # already complete).
     stored, stores_read = citers_store.citer_ids_for(
         list(ids), bridges_dir() / CITER_IDS_INDEX,
         on_read=lambda i, n, slug: job.step(BRIDGE_PHASES[1], f"reading {slug}", i, n))

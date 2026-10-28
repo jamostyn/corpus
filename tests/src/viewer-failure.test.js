@@ -1,7 +1,7 @@
 // Tests for corpus-highlights.js's "viewer did not start" readout.
 //
-// Jack, 2026-09-29, Windows build: "the windows pdf viewer is completely
-// black. it shows the controls but no PDF". When pdf.js's modules fail to
+// Bug (2026-09-29, Windows build): the PDF viewer was completely black,
+// showing the controls but no PDF. When pdf.js's modules fail to
 // run there is no visible error at all; the readout reports the type each
 // module was served with.
 //

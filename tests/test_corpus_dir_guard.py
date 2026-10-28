@@ -2,8 +2,8 @@
 
 This has happened twice.
 
-  * 2026-09-09 — `corpus_dir` pointed at a Paper Machine folder of 4288
-    unrelated files. The app showed nothing and said nothing.
+  * 2026-09-09 — `corpus_dir` pointed at an unrelated folder of 4288
+    files. The app showed nothing and said nothing.
   * 2026-09-17 — `corpus_dir` pointed at `corpus/dev` itself. Three
     empty directories (`papers/`, `summaries/`, `inbox/`) sat inside
     the repo until someone went looking.
@@ -68,7 +68,7 @@ def test_a_git_repository_is_not_rejected_merely_for_being_one(tmp_path):
     """Catches: widening the check to "any git repo".
 
     Keeping a corpus under version control is a reasonable thing for a
-    researcher to do, and Jack's own corpora sit inside a git tree.
+    researcher to do, and corpora often sit inside a git tree.
     Only the Corpus SOURCE markers may trigger the guard."""
     from _paths import is_corpus_source_tree
     (tmp_path / ".git").mkdir()
@@ -112,7 +112,7 @@ def test_no_test_can_write_the_real_user_config():
     This test file POSTs real paths to /api/config. Without the
     redirect that is harmless only while the guard works — and on
     2026-09-17, mutating the guard away made the POST succeed and
-    overwrite Jack's actual `~/.corpus/config.json`. A test suite must
+    overwrite the user's real `~/.corpus/config.json`. A test suite must
     not be able to damage the user's configuration when the code under
     test is broken, because broken code is exactly when it runs."""
     import config_api

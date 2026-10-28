@@ -103,9 +103,8 @@ function _memberModeByKind(kind) {
 // by the notes entity-link picker); reusing it keeps a single
 // definition of "how a paper is named in a list" rather than a second
 // copy that drifts.
-// Placeholder naming what the filter actually searches. Jack filed
-// "should be able to search by author here as well" against a box
-// labelled only "Filter papers…", which gave no hint either way.
+// Placeholder naming what the filter actually searches. A box
+// labelled only "Filter papers…" gave no hint whether author was searched.
 //
 // `searchHint` lives on the MODES entry directly beside `searchFields`
 // so the prose and the field list are read and edited together. An
@@ -265,7 +264,7 @@ async function _editMember(kind, id, op) {
 // reusing it would mean gutting it. What the two DO share — how a row
 // is labelled and identified — comes from the same MODES functions, so
 // the duplicated part is modal markup, not a fact. Extracting a shared
-// picker shell is a ROADMAP item.
+// picker shell is a planned cleanup.
 
 function _dismissMemberPicker() {
   const old = document.querySelector(".pj-picker-overlay");
@@ -367,8 +366,8 @@ async function _openMemberPicker(kind) {
 
 // ---------- The inverse: file THIS paper into projects ----------------
 //
-// Jack, 2026-09-21: "can you add a button somewhere in the paper view up
-// here to add a paper to a project."
+// Requirement (2026-09-21): a button in the paper view header adds the
+// paper to a project.
 //
 // Membership was only ever editable from the project side — open a
 // project, add papers to it. This is the reverse entry point: file the

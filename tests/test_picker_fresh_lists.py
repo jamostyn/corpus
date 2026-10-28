@@ -1,7 +1,7 @@
 """Pickers always show the corpus as it is now, in every window.
 
-Jack, 2026-09-29: "when a note is popped out, the link paper feature
-doesnt update when new papers are added to the corpus". The note link
+Bug (2026-09-29): in a popped-out note the link-paper picker did not
+pick up papers added to the corpus. The note link
 picker and the project member picker loaded a list only when it was
 empty; only the window that ran an import reloaded its papers, so a
 popped-out note kept the list from when it opened.

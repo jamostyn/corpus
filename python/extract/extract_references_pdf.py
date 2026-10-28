@@ -30,8 +30,7 @@ KNOWN DEFECT — titles. 10.4% of entries (320/3066) carry a title that
 is a parse fragment ("2", "pp", "907-915"). Their author and year are
 correct; only `_title()` is wrong, on styles that print the year at the
 END of the citation rather than after the authors. The 0.1% figure
-above counts missing author/year and does NOT catch this. Tracked in
-ROADMAP.md with a fix sketch. Callers should treat `title` as
+above counts missing author/year and does NOT catch this. Callers should treat `title` as
 best-effort; `author`, `year` and `doi` are the reliable fields.
 
 Sampled disagreements with Crossref were checked by hand: they were
@@ -43,7 +42,7 @@ Known-weak cases, both verified by hand rather than assumed:
   * Science-style numbered notes bundling several citations into ONE
     numbered item (knowlton-1993). 20 entries come back, but each is a
     bundle, so authors and years attach to the wrong citation. Do not
-    trust that paper's extracted references. Tracked in ROADMAP.md.
+    trust that paper's extracted references.
   * Scanned PDFs with no text layer return status "unreadable". They
     are reported, never guessed at.
 
@@ -295,8 +294,7 @@ def pdf_text(pdf) -> str:
     """Full text of a PDF, or "" if it cannot be opened.
 
     Imports pymupdf under its modern name. `extract_metadata.py` still
-    uses the legacy `fitz` alias, which PyMuPDF has deprecated — see the
-    ROADMAP entry. New code uses `pymupdf` so it does not add to that
+    uses the legacy `fitz` alias, which PyMuPDF has deprecated. New code uses `pymupdf` so it does not add to that
     debt."""
     try:
         import pymupdf

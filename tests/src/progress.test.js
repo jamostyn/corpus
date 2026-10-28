@@ -1,7 +1,7 @@
 // Tests for src/progress.js — the floating job-progress banner.
 //
-// Jack, 2026-09-21: "the importing papers progress thing only shows up if
-// you hit scan a second time and it doesnt go away when its done."
+// Bug (2026-09-21): the import progress only showed on a second scan, and
+// did not go away when done.
 //
 // Both were timing bugs, invisible to anyone reading the render code:
 //   * the first poll can beat the server's `progress.start()`, saw
@@ -123,8 +123,8 @@ test("the meta line uses tabular digits", () => {
 
 test("each meta value is its own anchored slot", () => {
   // Catches the three values being joined back into one string (they
-  // were, and Jack reported the text "still shifting ... as the
-  // characters change"): a shared box re-flows every value when any one
+  // were, and the text shifted as the
+  // characters changed): a shared box re-flows every value when any one
   // of them changes width.
   const { P, el: host } = setup();
   P.render({ active: true, job: "Importing papers", phase: "Reading PDFs",

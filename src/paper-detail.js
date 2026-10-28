@@ -9,8 +9,6 @@
 // Depends on globals from entity-keys.js: `EntityKeys.author`,
 // `EntityKeys.journal` — used to build cross-pane deep-link anchors
 // with the same keys the backend aggregators produce.
-//
-// See CODE_MAP.md for the full picture.
 
 // ---------- Paper detail ----------
 
@@ -38,8 +36,7 @@ function renderDetail() {
  *  One renderer for every place paper info appears. It used to write into
  *  `#paper-detail` directly, so the popped-out note's side panel carried
  *  its own compact copy — title, authors, year, venue, DOI, abstract —
- *  and Jack (bug report, 2026-09-25): "i should be able to see all the
- *  paper info here. not just this limited info".
+ *  and the panel was reported (2026-09-25) to show too little paper info.
  *
  *  opts.panel  — render inside another view (the note panel): info only.
  *                No Paper info / PDF subtabs (the panel has its own), no
@@ -778,7 +775,7 @@ function renderPaperInto(host, d, opts = {}) {
   //  ✗ absent      — source could return this + we extract that field
   //                  + this paper didn't have it
   //  ⊘ skipped     — source has this field, Corpus deliberately doesn't
-  //                  extract it (per Jack's audit)
+  //                  extract it (by design)
   //  — n/a         — source doesn't track this field at all
   //
   // For MERGED fields (same key checked across all three columns), a

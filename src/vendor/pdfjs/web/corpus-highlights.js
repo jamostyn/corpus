@@ -115,7 +115,7 @@
 // spanning more than one line has a bounding box far larger than the
 // text in it: selecting the end of line 2 through line 3 produces a box
 // that also covers the START of line 2. Highlights sitting there were
-// deleted without ever being touched — reported by Jack, and true of
+// deleted without ever being touched — and true of
 // the eraser as well, where it silently destroyed notes. Both paths run
 // through `highlightsOverlapping`, which now compares every stored rect
 // against every selection rect.
@@ -461,7 +461,7 @@
   // sprinkling snapshot calls across them would guarantee one gets
   // missed.
   //
-  // One level only, per Jack's "just the last one". Undo restores the
+  // One level only: just the last action. Undo restores the
   // snapshot and clears it; there is no redo.
   //
   // Notes are NOT undoable here, and editing one CLEARS the snapshot.
@@ -549,8 +549,7 @@
   // loads, so "not found yet" and "gone for good" look the same here
   // and both are safe.
   //
-  // Jack, 2026-09-22: "clicking on these links doesnt actually bring me
-  // to the place where it is highlighted." PDF.js renders pages lazily,
+  // Bug (2026-09-22): highlight links did not scroll to the highlight. PDF.js renders pages lazily,
   // and a highlight's box is only drawn when its page renders. This used
   // to look for the box and give up when it was not there — which is
   // every highlight on a page you had not scrolled to yet. So the link
@@ -669,7 +668,7 @@
                collectSelectedSpans(range));
     const text  = sel.toString().trim();
 
-    // Overlap rule (Jack's clarification): only touch existing
+    // Overlap rule: only touch existing
     // highlights when the user STARTED inside one. Starting outside
     // and dragging over an existing one is a "highlight over top",
     // not an edit.
@@ -978,7 +977,7 @@
   document.addEventListener("contextmenu", (e) => {
     // Note-adding is disabled during Highlight Mode — drag-select
     // needs the textLayer active + I-beam cursor for drawing new
-    // highlights, and Jack wants right-click there to fall through to
+    // highlights, and right-click there falls through to
     // the browser default (Look Up 'word' etc.).
     if (state.highlightMode) return;
     if (!state.noteMode) return;                        // browser default OK
@@ -1172,7 +1171,7 @@
   // and module scripts run before this `defer` script (same ordered
   // list). So if it is missing here, pdf.js never ran, and the pane
   // would otherwise be a toolbar over an empty (dark-mode: black) page
-  // with no message anywhere a user can see (Jack, Windows, 2026-09-29).
+  // with no message anywhere a user can see (Windows, 2026-09-29).
   // The readout names each viewer module and the type it was served
   // with, which is the first thing to know on a machine we cannot
   // attach a debugger to.

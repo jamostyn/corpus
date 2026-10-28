@@ -16,6 +16,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from _version import __version__
+
 logger = logging.getLogger("corpus.api_http")
 
 
@@ -52,7 +54,8 @@ def corpus_user_agent() -> str:
     never hurts. Corpus reads CORPUS_MAILTO env var per-user so we
     don't leak any single email into shipped binaries."""
     mail = _os.environ.get("CORPUS_MAILTO", "").strip()
-    return f"Corpus/0.1 (mailto:{mail})" if mail else "Corpus/0.1"
+    agent = f"Corpus/{__version__}"
+    return f"{agent} (mailto:{mail})" if mail else agent
 
 
 def api_headers() -> dict:
@@ -294,16 +297,15 @@ def norm_title(s: str) -> str:
 
 def title_similarity(a: str, b: str) -> float:
     """0.0-1.0 SequenceMatcher ratio between two titles after
-    normalization. 0.85 is the accept threshold used by backfill_dois
-    and the Crossref title-search fallback."""
+    normalization. 0.85 is the accept threshold used by the Crossref
+    title-search fallback."""
     import difflib
     return difflib.SequenceMatcher(None, norm_title(a), norm_title(b)).ratio()
 
 
 # Floor for accepting an OpenAlex / Semantic Scholar record found BY
 # TITLE. Stricter than Crossref's 0.85 because these two searches can
-# return a confident-looking near-miss (ROADMAP "Recover papers whose DOI
-# resolution failed", measured 2026-08-26). One constant so both clients
+# return a confident-looking near-miss (measured 2026-08-26). One constant so both clients
 # agree on what counts as the same paper.
 TITLE_MATCH_FLOOR = 0.90
 

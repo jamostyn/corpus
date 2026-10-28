@@ -71,8 +71,8 @@ def test_no_unlisted_shipped_routes():
     This is the half the old test lacked — it only checked for MISSING
     routes, so /api/version and /api/pick-corpus both existed unlisted
     for the whole v0.1 series. An unlisted route is one nobody has
-    decided is safe to ship, and it also won't appear in CODE_MAP's
-    user-action table."""
+    decided is safe to ship, and it also won't appear in the
+    documented user-action table."""
     import server
     rules = {r.rule for r in server.app.url_map.iter_rules()}
     dev_or_framework = {r for r in rules
@@ -82,7 +82,7 @@ def test_no_unlisted_shipped_routes():
     unlisted = rules - SHIPPED_ROUTES - dev_or_framework
     assert not unlisted, (
         f"new routes not recorded in SHIPPED_ROUTES: {sorted(unlisted)}. "
-        f"Add them here and to CODE_MAP.md's user-action table.")
+        f"Add them here.")
 
 
 def test_paths_helpers_exist():

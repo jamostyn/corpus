@@ -101,9 +101,8 @@ class _Bridge:
         pop-out windows, which are keyed "<kind>:<id>".
 
         Returns "ok", or "busy" when that PDF is already popped out in its
-        own window or showing in ANOTHER note's panel. Jack, 2026-09-21:
-        "when a paper is open here it also shouldnt be able to be opened
-        in another window to prevent double editing."
+        own window or showing in ANOTHER note's panel. A paper open in one place
+        cannot be opened in another, to prevent double editing.
 
         The main window is told either way, so its pane can lock. (The
         event field is still called `slug`; it carries the key.)

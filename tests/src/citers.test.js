@@ -1,7 +1,7 @@
 // Tests for src/citers.js — the Citers section of the paper info panel.
 //
-// Jack, 2026-09-22: "have clear distinctions like for references about
-// which citers are in the corpus." The distinction uses the References
+// Requirement (2026-09-22): clear distinction, as for references, of
+// which citers are in the corpus. The distinction uses the References
 // list's own `ref-incorpus` marker, and these hold it to that.
 
 const { test } = require("node:test");
@@ -30,7 +30,7 @@ test("a paper with no DOI is told why it cannot be fetched", () => {
 });
 
 test("in-corpus citers carry the same marker references use", () => {
-  // The distinction Jack asked for. Catches in-corpus citers rendered
+  // The in-corpus distinction. Catches in-corpus citers rendered
   // like any other, and outsiders mis-marked as in the corpus.
   const h = C.render({
     status: "ok", stored_count: 2, complete: true, fetched_at: "2026-09-22T10:00:00",

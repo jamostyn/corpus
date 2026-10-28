@@ -1,8 +1,7 @@
 // Citers — every known work citing this paper, in the paper info panel.
 //
-// Jack, 2026-09-22: "implement a storage for the citers of each paper.
-// integrate it into the info panel and have clear distinctions like for
-// references about which citers are in the corpus."
+// Requirement (2026-09-22): store the citers of each paper, show them in
+// the info panel, and mark which citers are in the corpus, as References do.
 //
 // Two groups, always in this order:
 //   * In your corpus — every one, linked with the SAME `ref-incorpus`

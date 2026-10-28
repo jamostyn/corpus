@@ -25,12 +25,12 @@ bounded, and fetching it for the whole corpus is ~70 requests.
 
 WHY A YEAR FILTER IS NOT NEEDED HERE
 ------------------------------------
-Jack's pruning rule — a paper older than the target can never cite it,
+The pruning rule — a paper older than the target can never cite it,
 because citations point backwards in time — is correct, and it is what
 makes an outward SEARCH terminate. At depth 2 it is redundant: every
 member of `backward(B)` cites B by construction, so it is already
-newer. The rule is recorded in ROADMAP for any future depth-3 work,
-where it does real work.
+newer. It would apply to any future depth-3 search, where it does
+real work.
 
 Nothing here touches the network or Flask. `collect_*` takes an
 already-fetched mapping; the fetching lives in `bridges_api`.

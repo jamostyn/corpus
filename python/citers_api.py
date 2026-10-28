@@ -114,8 +114,7 @@ def fetch_citers(slug):
 def fetch_all_citers():
     """Fetch citers for every paper that has none stored. Returns at once.
 
-    Jack, 2026-09-22: "fetch the citations for all the papers curently in
-    corpus." Roughly 3,000 OpenAlex requests at 742 papers, so it runs in
+    Roughly 3,000 OpenAlex requests at 742 papers, so it runs in
     a background thread under its own progress job, and is resumable —
     papers already stored are skipped, so an interrupted run continues.
     """

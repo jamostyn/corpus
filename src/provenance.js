@@ -7,8 +7,6 @@
 // the detail modules declare their functions. Function bodies still
 // resolve `SRC_ABBR`, `escHtml`, `escAttr`, `tt` at call-time — same
 // pattern as the detail modules use for other app.js globals.
-//
-// See CODE_MAP.md, "Feature → files map / Shared helpers".
 
 (function () {
   // Which raw `sources_seen` / `<field>_from` strings map to which

@@ -60,7 +60,7 @@ CHANGELOG  = DEV_ROOT / "CHANGELOG.md"
 # denylist". A denylist silently ships whatever new top-level directory
 # someone adds (scratch dirs, notes, a corpus someone dropped in the
 # repo); an allowlist fails loudly by omitting a file the build needs,
-# which surfaces immediately as a build error on Jack's machine rather
+# which surfaces immediately as a build error on the developer's machine rather
 # than as leaked data on a tester's.
 WINDOWS_SRC_DIRS  = ["python", "src", "dist_assets"]
 WINDOWS_SRC_FILES = [
@@ -69,6 +69,9 @@ WINDOWS_SRC_FILES = [
     "build_windows.bat",
     "requirements.txt",
     "requirements-build.txt",
+    # AGPL: the licence and third-party notices go with every copy.
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
 ]
 
 # Pruned from the copied directories, matched by NAME at every depth.
@@ -261,16 +264,19 @@ def _write_ship_readme(version: str) -> None:
         f"\n"
         f"1. Unzip Corpus-v{version}.zip.\n"
         f"2. Drag Corpus.app to /Applications.\n"
-        f"3. First launch only: right-click Corpus.app -> Open, then\n"
-        f"   confirm the \"Apple cannot check for malicious software\"\n"
-        f"   dialog. Regular double-click works after that.\n"
+        f"3. First launch only: macOS blocks it because it is not signed\n"
+        f"   by Apple. Open System Settings -> Privacy & Security, scroll\n"
+        f"   to the message about Corpus and click Open Anyway. It opens\n"
+        f"   normally after that.\n"
         f"4. First launch will ask where to keep your papers. Pick any\n"
         f"   folder (or an existing corpus dir if you're upgrading).\n"
         f"\n"
-        f"WINDOWS — Corpus-v{version}-windows-src.zip\n"
+        f"WINDOWS — Corpus-v{version}-windows-src.zip (build input)\n"
         f"\n"
-        f"There is no prebuilt Windows .exe: the build tool cannot make a\n"
-        f"Windows app from a Mac. This zip builds one on your machine.\n"
+        f"The build tool cannot make a Windows app from a Mac, so this zip\n"
+        f"builds it on a Windows PC. Zip the resulting dist\\Corpus folder\n"
+        f"as Corpus-v{version}-windows.zip: that is the Windows download\n"
+        f"on the GitHub release.\n"
         f"\n"
         f"1. Install Python 3.11+ from python.org (NOT the Microsoft Store\n"
         f"   version). Tick \"Add python.exe to PATH\" in the installer.\n"
@@ -280,7 +286,7 @@ def _write_ship_readme(version: str) -> None:
         f"   Windows SmartScreen may warn the app is unrecognised (it is\n"
         f"   unsigned): More info -> Run anyway.\n"
         f"\n"
-        f"Bug reports: <address TBD>\n"
+        f"Bug reports: https://github.com/jamostyn/corpus/issues\n"
     )
     readme.write_text(body, encoding="utf-8")
     print(f"  wrote {readme}")

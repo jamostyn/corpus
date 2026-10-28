@@ -1,9 +1,8 @@
 """Projects — folders of papers and notes that don't move anything.
 
-Added 2026-09-14 on Jack's request: "a tab for projects … these are
-essentially folders of notes and papers. the notes and papers arent
-actually stored in these folders, just organized that way. papers and
-notes can be in multiple projects."
+Added 2026-09-14: a tab for projects, which are folders of notes and
+papers. Items are not stored in the folders, only organized that way,
+and papers and notes can be in multiple projects.
 
 These are real behavioural tests through the Flask test client, not
 source assertions — the whole feature is server-side CRUD over JSON
@@ -38,8 +37,8 @@ def _mk(client, title="Proj"):
 def test_a_paper_can_be_in_several_projects_at_once(client, corpus_dir):
     """Catches: storing membership as a single owning project.
 
-    This is the requirement in Jack's own words — "papers and notes can
-    be in multiple projects". A one-project-per-paper model (a `project`
+    The requirement is that papers and notes can
+    be in multiple projects. A one-project-per-paper model (a `project`
     scalar on the summary, or a move-on-add) would pass a naive
     add-then-read test and fail only here."""
     _summary(corpus_dir, "schunn-2001")
@@ -216,7 +215,7 @@ def test_adding_a_member_that_does_not_exist_is_refused(client, corpus_dir):
 def test_a_hand_edited_project_file_degrades_instead_of_500ing(client, corpus_dir):
     """Catches: assuming `members` is well-formed.
 
-    Project files are plain JSON in the user's corpus dir; Jack edits
+    Project files are plain JSON in the user's corpus dir; users may edit
     files by hand. A malformed members block must yield an empty
     folder, not take the whole Projects tab down."""
     pid = _mk(client)
@@ -234,8 +233,7 @@ def test_a_hand_edited_project_file_degrades_instead_of_500ing(client, corpus_di
 
 def test_create_rename_and_list(client, corpus_dir):
     """Catches: a rename that doesn't persist, or a list that doesn't
-    reflect it. Jack asked specifically to "create new projects and
-    edit the title"."""
+    reflect it. Projects can be created and their titles edited."""
     pid = _mk(client, "First")
     assert client.put(f"/api/project/{pid}",
                       json={"title": "Second"}).get_json()["title"] == "Second"

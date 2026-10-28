@@ -1,8 +1,7 @@
 // The shared sort behind the Papers sidebar and the note link picker.
 //
-// Jack, 2026-09-28: "when i link a paper to a note, i want to be able to
-// change what is being sorted by for all the options. so i can sort by
-// most recent added papers for example."
+// Requirement (2026-09-28): the note link picker can sort by any of the
+// tab's options, for example most recently added papers first.
 
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
@@ -17,7 +16,7 @@ const PAPER_SORTS = [
 ];
 const ids = (rows) => rows.map(r => r.id);
 
-test("date added, newest first — the case Jack asked for", () => {
+test("date added, newest first", () => {
   // Catches the direction being ignored or the dates compared wrongly.
   const rows = [
     { id: "old", added_at: "2026-08-01T10:00:00" },

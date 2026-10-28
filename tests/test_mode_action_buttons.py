@@ -9,13 +9,12 @@ consolidated on 2026-08-27.
 
 So a mode now declares `actionBtnId` and switchMode iterates. These
 tests pin that, plus the HTML↔MODES agreement that a new tab depends
-on: CLAUDE.md promises "adding a new tab = one array entry + matching
+on: the project's convention is "adding a new tab = one array entry + matching
 HTML", and that promise is only true if something checks the ids line
 up.
 
 Source-level assertions on app.js / index.html — switchMode needs a
-live DOM and a Flask backend, so the vm harness cannot run it (see
-TESTING.md § Known gaps).
+live DOM and a Flask backend, so the vm harness cannot run it.
 """
 from __future__ import annotations
 

@@ -1,21 +1,19 @@
 """No pane renders a bare ISO country code.
 
-Jack, 2026-09-17: "can you also have it show the full name of the
-country? not sure which one this is."
+Requirement (2026-09-17): show the full country name next to the code.
 
 OpenAlex stores ISO 3166-1 alpha-2 codes and Corpus rendered them raw
 in NINE places across five modules — the institutions sidebar, three
 spots on the institution detail, three on the author detail, the
-journal detail, and the per-institution meta in the paper detail. Jack
-saw one of them; fixing only that one would leave eight.
+journal detail, and the per-institution meta in the paper detail. Only
+one was reported; fixing only that one would leave eight.
 
 That is the standing rule in this codebase: a change to one view gets
 ported to every view of the same shape. Nothing enforces it but a test,
 so this is the test.
 
 Source-level assertions — these renderers need a live DOM and real API
-payloads, so the vm harness cannot execute them (see TESTING.md §
-Known gaps). The formatting itself IS executed, in
+payloads, so the vm harness cannot execute them. The formatting itself IS executed, in
 tests/src/countries.test.js.
 """
 from __future__ import annotations

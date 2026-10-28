@@ -110,7 +110,7 @@ def semanticscholar_match_title(title: str) -> dict | None:
 
     `/paper/search/match` is purpose-built for title -> one paper and
     answers a clean 404 when nothing matches; `/paper/search` 429s
-    keyless (ROADMAP, verified 2026-08-26). The hit must still clear
+    keyless (verified 2026-08-26). The hit must still clear
     TITLE_MATCH_FLOOR — the endpoint can return a near-miss.
     """
     if not title_worth_searching(title):

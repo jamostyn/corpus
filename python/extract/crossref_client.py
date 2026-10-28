@@ -5,7 +5,7 @@ Split from extract_metadata.py on 2026-08-15.
 
 Called by extract_metadata.extract_metadata() and by _select_best_doi()
 for its per-candidate cross-check. `crossref_search_by_title` is also
-called by scripts/backfill_dois.py.
+called by the DOI-backfill tooling.
 """
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ from _api_http import (
 def crossref_lookup(doi: str) -> dict | None:
     """Hit api.crossref.org/works/<doi>. Returns the `message` payload
     or None on any failure. Crossref asks for a mailto in User-Agent so
-    they can reach out about abuse — using Jack's email per global config.
+    they can reach out about abuse — using the user's email from settings.
     """
     url = CROSSREF_URL.format(doi=urllib.parse.quote(doi, safe="/"))
     payload = api_get_json(url, CROSSREF_TIMEOUT)
@@ -44,9 +44,9 @@ def crossref_lookup(doi: str) -> dict | None:
 # ---------- Title-search fallback -------------------------------
 # When the DOI regex fails on a PDF's first 3 pages, we fall back
 # to a title+author+year search against Crossref. Same thresholds
-# as scripts/backfill_dois.py — >=0.85 title similarity AND year
-# off by <=1 — so a candidate accepted here matches what the
-# backfill script would accept later.
+# as DOI backfill — >=0.85 title similarity AND year
+# off by <=1 — so a candidate accepted here matches what a
+# later backfill would accept.
 
 def crossref_search_by_title(title: str, surname: str, year: int | None,
                              threshold: float = 0.85) -> str | None:
@@ -317,7 +317,7 @@ def _from_crossref(msg: dict) -> dict:
         if event.get("location"):
             out["event_location"] = event["location"].strip()
 
-    # ---- Extended Crossref fields (added 2026-08-08 per Jack's audit) ---
+    # ---- Extended Crossref fields (added 2026-08-08) ---
 
     # Edition / chapter / component numbers (for books / book chapters /
     # supplements). Only emit when the publisher actually deposited them.

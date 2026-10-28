@@ -4,8 +4,7 @@
 the PDF.js viewer iframe. It returns early without a `?file=/pdf/<slug>`
 param, and every code path needs a live text layer, a selection, and
 PDF.js's page DOM. The Node `vm` harness in tests/src/ cannot supply any
-of that, so there is NO behavioural coverage of this file — see
-TESTING.md § Known gaps.
+of that, so there is NO behavioural coverage of this file.
 
 What IS mechanically checkable is the set of invariants whose violation
 is silent rather than loud. Each test below pins one of those. They are
