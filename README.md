@@ -30,6 +30,11 @@ per paper.
 
 Get the latest version from the [Releases](../../releases) page.
 
+> **Platform note.** Corpus is developed and tested on macOS. The
+> Windows version is built from the same code and has been run on
+> Windows, but it has not been tested as thoroughly — please report
+> anything that does not work there.
+
 **Mac** — download `Corpus-v<version>.zip`, unzip it, and drag
 `Corpus.app` into Applications. The first time you open it, macOS will
 block it because it is not signed by Apple: open **System Settings →
