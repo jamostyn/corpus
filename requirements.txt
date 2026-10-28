@@ -1,0 +1,22 @@
+# Corpus dev — minimal deps for v0.1 (deterministic extraction only).
+# Grows in Phase 2+ (Tauri sidecar, packaging, etc.)
+
+# PDF parsing (used by extract_text, extract_metadata, extract_references)
+PyMuPDF>=1.24
+
+# HTTP client (Crossref / Semantic Scholar / OpenAlex enrichment)
+requests>=2.31
+
+# YAML frontmatter (parsing is custom via _fm.py; PyYAML used for tests)
+PyYAML>=6.0
+
+# Web server for desktop shell (Phase 1d)
+flask>=3.0
+
+# Native window shell (system WebView — WebKit on macOS, WebView2 on
+# Windows). Falls back to browser if not installed.
+pywebview>=5.0
+
+# OS-native secret storage for user API keys (Keychain on macOS,
+# Credential Manager on Windows, Secret Service on Linux)
+keyring>=24.0

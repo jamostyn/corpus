@@ -1,0 +1,241 @@
+/* Corpus highlight plugin — sits on top of PDF.js's default viewer.css. */
+
+/* Highlight layer: siblings of PDF.js's canvasWrapper/textLayer inside .page.
+   Positioned absolute to the page. pointer-events:none lets clicks/selection
+   pass through to the textLayer. */
+.corpus-highlight-layer {
+  position: absolute;
+  /* top/left/width/height set inline per-page — matches the textLayer's
+     rect (not .page's, which has a 9px border that would push
+     highlights off) so percentages inside land pixel-perfect on
+     glyphs. */
+  pointer-events: none;
+  z-index: 2;    /* above canvas (z-index:1) but below textLayer (z-index:3) */
+}
+
+/* Each rect. opacity:0.4 is highlighter-standard — dark enough to be
+   obvious, light enough to keep text underneath legible. */
+.corpus-highlight {
+  position: absolute;
+  opacity: 0.4;
+  border-radius: 2px;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* Floating color swatch — bottom-left of the viewer window. Only shown
+   when highlight mode is on. */
+#corpusColorSwatch {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  z-index: 9999;
+  display: none;   /* toggled by the highlight-mode button */
+  transition: transform 0.1s;
+}
+#corpusColorSwatch:hover  { transform: scale(1.08); }
+#corpusColorSwatch:active { transform: scale(0.96); }
+
+/* Color-picker popover — appears above the swatch when clicked. */
+#corpusColorPicker {
+  position: fixed;
+  bottom: 70px;
+  left: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  z-index: 10000;
+}
+#corpusColorPicker .corpus-color-cell {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.1s;
+}
+#corpusColorPicker .corpus-color-cell:hover { transform: scale(1.12); }
+#corpusColorPicker .corpus-color-cell.selected {
+  border-color: #333;
+  box-shadow: 0 0 0 2px white inset;
+}
+
+/* Highlight toolbar button — our own class (no .toolbarButton) so
+   PDF.js's ::before/::after icon pseudo-elements don't render as
+   ghost boxes underneath the text.
+   Default: solid darker-than-toolbar background + white text so
+     'Highlight' reads clearly on the dark toolbar.
+   Toggled: solid amber fill (the highlighter identity) + dark text. */
+/* Match PDF.js's toolbar layout: #toolbarViewerLeft children are
+   float:left, container is 32px tall, .toolbarButton is 28×28 with
+   margin:2px 1px (2 + 28 + 2 = 32). Our items MUST float:left and
+   have the same box-model dimensions or they misalign. */
+.corpus-toolbar-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  float: left;
+  height: 28px;
+  margin: 2px 1px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  min-width: 0;
+  width: auto;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 26px;              /* 28 - 2×border = fill vertically */
+  color: #ffffff;
+  background: #4a4a4a;
+  border: 1px solid #666666;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s, box-shadow 0.1s;
+}
+.corpus-toolbar-btn::before,
+.corpus-toolbar-btn::after { content: none !important; }
+.corpus-toolbar-btn:hover  { background: #5a5a5a; border-color: #808080; }
+.corpus-toolbar-btn.toggled {
+  background: #FFC107;
+  border-color: #FFA000;
+  color: #1a1a1a;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4);
+}
+.corpus-toolbar-btn.toggled:hover { background: #FFD54F; }
+
+/* 'show' checkbox pair — same box model as the button so it lands
+   on the same baseline. */
+#corpusShowLabel {
+  float: left;
+  height: 28px;
+  line-height: 28px;
+  margin: 2px 1px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  color: #e0e0e0;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+#corpusShowLabel input[type="checkbox"] { margin: 0; cursor: pointer; }
+
+/* Right-click "Create note" menu — floats above the highlight the user
+   right-clicked. Same visual language as PDF.js's own popovers to stay
+   consistent with the surrounding chrome. Dismissed on outside-click
+   or Escape (wired in corpus-highlights.js). */
+.corpus-highlight-menu {
+  position: fixed;
+  z-index: 10000;
+  min-width: 140px;
+  padding: 4px;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+}
+.corpus-highlight-menu-item {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  background: transparent;
+  color: #e6e6e6;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  border-radius: 3px;
+}
+.corpus-highlight-menu-item:hover { background: #444; }
+.corpus-highlight-menu-sep {
+  height: 1px;
+  margin: 3px 4px;
+  background: #444;
+}
+.corpus-highlight-menu-item-danger        { color: #ff9c9c; }
+.corpus-highlight-menu-item-danger:hover  { background: #5a2020; color: #ffffff; }
+
+/* ---- Notes-only pointer-events swap ------------------------------------
+   Applied ONLY when Note Mode is ON and Highlight Mode is OFF (see
+   corpus-highlights.js:refreshInteractionMode). In this configuration:
+
+     * textLayer stops receiving clicks → cursor stays default over
+       text and macOS doesn't auto-select the clicked word on right-
+       click (that auto-select was defeating the contextmenu handler's
+       "is user text-selecting?" guard and letting the OS Look-Up menu
+       win over Create Note).
+     * .corpus-highlight rects receive clicks → left-click / right-
+       click delegate cleanly to the note menu / focus-note handlers.
+
+   In every OTHER mode (Highlight ON or both off) the defaults win:
+   textLayer is interactive so drag-select works for drawing new
+   highlights and Look Up / Copy on selected text work as usual. */
+body.corpus-note-only .textLayer      { pointer-events: none; }
+body.corpus-note-only .corpus-highlight {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* ---------- Erase mode ----------
+   The Erase toggle is tinted red rather than the amber used by
+   Highlight/Note Mode, because it is the only destructive toggle in
+   the toolbar and the two must not be confusable at a glance. */
+#corpusEraseBtn.toggled {
+  background: #E53935;
+  border-color: #B71C1C;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+}
+
+/* Cursor feedback while erasing. Applied to the text layer only — the
+   toolbar keeps a normal pointer so the toggle stays clickable. */
+body.corpus-erasing .textLayer,
+body.corpus-erasing .textLayer span {
+  cursor: crosshair;
+}
+
+/* Existing highlights get a faint dashed outline while the eraser is
+   armed, so the user can see what is actually erasable before dragging
+   rather than discovering it by trial. */
+body.corpus-erasing .corpus-highlight {
+  outline: 1px dashed rgba(183, 28, 28, 0.85);
+  outline-offset: 1px;
+}
+
+/* Undo sits disabled most of the time — it only lights up right after a
+   highlight/unhighlight. Muted rather than hidden so the affordance is
+   discoverable before it is needed. */
+#corpusUndoBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+#corpusUndoBtn:disabled:hover {
+  background: #4a4a4a;
+  border-color: #6a6a6a;
+}
+
+/* Highlight-pick mode: the parent armed a pick and is waiting for one
+   click. The cursor is the signal that a click means something other
+   than usual. */
+body.corpus-picking .corpus-highlight { cursor: crosshair; pointer-events: auto; }
+body.corpus-picking .corpus-highlight:hover { outline: 2px solid #1565c0; }
+
+/* Flash after scroll-to-highlight, so the target is findable on a
+   dense page. */
+@keyframes corpus-hl-flash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(21,101,192,0); }
+  30%      { box-shadow: 0 0 0 4px rgba(21,101,192,.55); }
+}
+.corpus-highlight-flash { animation: corpus-hl-flash 1.5s ease-in-out; }

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Corpus</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Corpus</div>
+    <div class="navarrows">
+      <button id="btn-back" class="btn navarrow" disabled aria-label="Back">&#8592;</button>
+      <button id="btn-fwd"  class="btn navarrow" disabled aria-label="Forward">&#8594;</button>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="papers">Papers</button>
+      <button class="tab"        data-tab="authors">Authors</button>
+      <button class="tab"        data-tab="institutions">Institutions</button>
+      <button class="tab"        data-tab="journals">Journals</button>
+      <button class="tab"        data-tab="notes">Notes</button>
+      <button class="tab"        data-tab="projects">Projects</button>
+      <button class="tab"        data-tab="documents">Documents</button>
+      <!-- Dev only. Hidden in markup and revealed by _loadDevOnly() only
+           when /api/config reports dev_mode, so a shipped build can never
+           show it — its code lives in src/dev_only/, which is stripped. -->
+      <button class="tab"        data-tab="testing" data-dev-only hidden>Testing</button>
+    </nav>
+    <div class="spacer"></div>
+    <button id="btn-add"      class="btn primary" disabled>Add PDFs…</button>
+    <button id="btn-scan"     class="btn"          disabled>Scan</button>
+    <button id="btn-new-note" class="btn primary" hidden>New note</button>
+    <button id="btn-new-project" class="btn primary" hidden>New project</button>
+    <button id="btn-add-document" class="btn primary" hidden>Add document…</button>
+    <button id="btn-settings" class="btn">Settings</button>
+  </header>
+
+  <input type="file" id="pdf-picker" accept=".pdf" multiple hidden>
+  <input type="file" id="document-picker" accept=".pdf" hidden>
+
+  <!-- Live progress for whichever long job the server is running.
+       Sits under the header so it is visible from every tab — a scan
+       started on Papers keeps reporting while the user browses Notes. -->
+  <div class="job-progress" id="job-progress" hidden></div>
+
+  <main class="layout" data-mode="papers">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <input type="search" id="filter"              placeholder="Filter papers…"       disabled>
+        <input type="search" id="author-filter"       placeholder="Filter authors…"      disabled hidden>
+        <input type="search" id="institution-filter"  placeholder="Filter institutions…" disabled hidden>
+        <input type="search" id="journal-filter"      placeholder="Filter journals…"     disabled hidden>
+        <input type="search" id="note-filter"         placeholder="Filter notes…"        hidden>
+        <input type="search" id="project-filter"      placeholder="Filter projects…"     hidden>
+        <input type="search" id="document-filter"     placeholder="Filter documents…"    hidden>
+        <input type="search" id="testing-filter"      placeholder="Filter features…"     hidden>
+      </div>
+      <div class="sidebar-sort" id="papers-sort-wrap">
+        <label class="sidebar-sort-label" for="papers-sort-field">Sort by</label>
+        <!-- Options filled from MODES (app.js), shared with the note link picker. -->
+        <select id="papers-sort-field" class="sidebar-sort-field"></select>
+        <button id="papers-sort-dir" class="sidebar-sort-dir" data-dir="asc"
+                title="Toggle sort direction" aria-label="Sort direction">↑</button>
+      </div>
+      <ol class="papers-list"       id="papers-list"></ol>
+      <ol class="authors-list"      id="authors-list"      hidden></ol>
+      <ol class="institutions-list" id="institutions-list" hidden></ol>
+      <ol class="journals-list"     id="journals-list"     hidden></ol>
+      <ol class="notes-list"        id="notes-list"        hidden></ol>
+      <ol class="projects-list"     id="projects-list"     hidden></ol>
+      <ol class="papers-list documents-list" id="documents-list" hidden></ol>
+      <ol class="testing-list"      id="testing-list"      hidden></ol>
+      <div class="sidebar-footer" id="count-line"></div>
+    </aside>
+
+    <section class="main-pane" id="main-pane">
+      <!-- One element, two states. `showEmptyState()` swaps the text:
+           no corpus chosen yet, versus a corpus that is set but holds
+           no papers. The second case used to render nothing at all —
+           a blank sidebar with no explanation — which is how a
+           mis-pointed folder looked identical to a working empty one. -->
+      <div class="empty-state" id="empty-state">
+        <h2 id="empty-state-title">Loading…</h2>
+        <p id="empty-state-body">Reading your corpus.</p>
+        <p class="empty-state-path" id="empty-state-path" hidden></p>
+        <button class="btn primary" id="empty-choose-dir" hidden>Choose corpus directory…</button>
+      </div>
+      <div class="paper-detail"       id="paper-detail"       hidden></div>
+      <div class="author-detail"      id="author-detail"      hidden></div>
+      <div class="institution-detail" id="institution-detail" hidden></div>
+      <div class="journal-detail"     id="journal-detail"     hidden></div>
+      <div class="note-detail"        id="note-detail"        hidden></div>
+
+      <!-- Detached note workspace: the note on the left, a PDF panel on
+           the right. Only rendered in a popped-out note window
+           (body.corpus-detached-note); the docked Notes tab is
+           unchanged. -->
+      <div class="note-workspace" id="note-workspace" hidden>
+        <div class="nw-note" id="nw-note"></div>
+        <div class="nw-split" id="nw-split" hidden></div>
+        <aside class="nw-panel" id="nw-panel" hidden>
+          <header class="nw-panel-head">
+            <span class="nw-panel-title" id="nw-panel-title">No paper selected</span>
+            <nav class="nw-panel-tabs" id="nw-panel-tabs" hidden>
+              <button class="pd-subtab active" data-nw-tab="pdf">PDF</button>
+              <button class="pd-subtab"        data-nw-tab="info">Paper info</button>
+            </nav>
+            <button class="btn ghost" id="nw-panel-close" aria-label="Close panel">✕</button>
+          </header>
+          <div class="nw-panel-body" id="nw-panel-body"></div>
+        </aside>
+      </div>
+      <div class="project-detail"     id="project-detail"     hidden></div>
+      <!-- Also .paper-detail: same flex layout, same [hidden] override, same
+           PDF pane styling. A document IS read like a paper. -->
+      <div class="paper-detail document-detail" id="document-detail" hidden></div>
+      <div class="testing-detail"     id="testing-detail"     hidden></div>
+    </section>
+  </main>
+
+  <!-- Settings modal -->
+  <div class="modal-overlay" id="settings-modal" hidden>
+    <div class="modal">
+      <header class="modal-header">
+        <h2>Settings</h2>
+        <button class="btn ghost" id="settings-close">✕</button>
+      </header>
+      <div class="modal-body">
+        <div class="field">
+          <label for="cfg-corpus-dir">Corpus directory</label>
+          <div class="row">
+            <input type="text" id="cfg-corpus-dir" placeholder="~/Documents/Corpus (recommended)">
+            <button class="btn" id="cfg-browse">Browse…</button>
+            <button class="btn" id="cfg-default">Use default</button>
+          </div>
+          <p class="hint">Corpus will read/write <code>papers/</code>, <code>summaries/</code>,
+             and <code>inbox/</code> subdirectories here. Pick anywhere you
+             like — <code>~/Documents/Corpus/</code> is the conventional
+             spot on macOS (visible in Finder, backed up by Time Machine).</p>
+        </div>
+        <div class="field">
+          <label for="cfg-mailto">Email for API polite pool</label>
+          <input type="email" id="cfg-mailto" placeholder="you@example.edu">
+          <p class="hint">Crossref and OpenAlex give politer rate limits to
+             identified clients. Optional but recommended.</p>
+        </div>
+        <div class="field">
+          <label for="cfg-s2-key">Semantic Scholar API key <span class="status" id="s2-status"></span></label>
+          <input type="password" id="cfg-s2-key" placeholder="leave blank to keep existing / send space to clear">
+          <p class="hint"><strong>Stored, not yet used.</strong> Corpus v0.1 is Crossref-only.
+             Semantic Scholar integration comes in a later iteration. When it lands, this
+             key will be forwarded for higher rate limits. Get one at
+             <a href="https://www.semanticscholar.org/product/api" target="_blank">semanticscholar.org/product/api</a>.</p>
+        </div>
+        <div class="field">
+          <label for="cfg-oa-key">OpenAlex API key <span class="status" id="oa-status"></span></label>
+          <input type="password" id="cfg-oa-key" placeholder="leave blank to keep existing / send space to clear">
+          <p class="hint"><strong>Stored, not yet used.</strong> Same story as above —
+             OpenAlex integration is a later feature.</p>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn" id="settings-cancel">Cancel</button>
+        <button class="btn primary" id="settings-save">Save</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Toast for status messages -->
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="tooltips.default.js"></script>
+  <!-- Shared helper modules load BEFORE the detail modules that use
+       them, so `window.Provenance` / `window.Coverage` etc. exist by
+       the time later scripts reference them at parse-time. Detail
+       modules load BEFORE app.js: app.js's top-level event-wiring
+       block (at the bottom of the file) evaluates identifiers like
+       `createNote` immediately when addEventListener is invoked, so
+       those functions need to exist on the global scope by then. The
+       feature modules only DEFINE functions at top level — their
+       function bodies (which reference `state`, `api`, etc. from
+       app.js) don't run until user interaction, by which time app.js
+       has loaded. -->
+  <script src="countries.js"></script>
+  <script src="sorting.js"></script>
+  <script src="progress.js"></script>
+  <script src="provenance.js"></script>
+  <script src="modals.js"></script>
+  <script src="nav.js"></script>
+  <script src="entity-keys.js"></script>
+  <script src="entity-detail.js"></script>
+  <script src="corpus-links.js"></script>
+  <script src="citers.js"></script>
+  <script src="paper-detail.js"></script>
+  <script src="author-detail.js"></script>
+  <script src="institution-detail.js"></script>
+  <script src="journal-detail.js"></script>
+  <script src="notes.js"></script>
+  <script src="projects.js"></script>
+  <script src="documents.js"></script>
+  <script src="note-workspace.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

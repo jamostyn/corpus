@@ -1,0 +1,45 @@
+# --- Python -------------------------------------------------------
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# --- Build artifacts / OS junk -----------------------------------
+.DS_Store
+*.spec.bak
+node_modules/
+
+# --- Secrets ------------------------------------------------------
+.env
+.env.local
+
+# --- User CORPUS DATA (defensive — real corpora live outside this
+#     repo, e.g. ~/Documents/CorpusTest/, but if anyone ever creates a
+#     corpus dir INSIDE the repo for testing, don't accidentally commit
+#     the PDFs, extracted summaries, or PyMuPDF text sidecars.) --------
+papers/*.pdf
+papers/*.txt
+summaries/
+inbox/
+archive/
+
+# --- Test scratch / config dumps ----------------------------------
+# ~/.corpus lives in the user's home; we never commit config or state.
+# Extra defensive rule in case a scratchpad drops copies in-tree.
+.corpus/
+tooltips.json
+planning.json
+bug-reports/
+scratchpad/
+
+# --- Editor + IDE -------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# PyInstaller build outputs (Ship Step 6+). Anchored to the repo root:
+# a bare `build/` also matched src/vendor/pdfjs/build/, so pdf.mjs and
+# its worker were never committed and no release tag could be rebuilt.
+/build/
+/dist/

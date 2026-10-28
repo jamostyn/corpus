@@ -1,0 +1,2055 @@
+/* Corpus v0.1 — minimal, readable, one-column-scroll-safe. */
+
+:root {
+  --bg:         #f7f7f8;
+  --bg-panel:  #ffffff;
+  --bg-sunk:   #ececee;
+  --fg:         #111214;
+  --fg-muted:  #6a6c72;
+  --border:     #dcdcde;
+  --border-str:#b0b1b6;
+  --accent:     #2b6cb0;
+  --accent-fg:  #ffffff;
+  --danger:     #b71c1c;
+  --ok:         #2f7d32;
+  --topbar-h:   50px;
+  --sidebar-w:  340px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ---------- Topbar ---------- */
+.topbar {
+  height: var(--topbar-h);
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  user-select: none;
+}
+.brand {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.2px;
+}
+.corpus-path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--fg-muted);
+  padding: 2px 8px;
+  background: var(--bg-sunk);
+  border-radius: 4px;
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spacer { flex: 1; }
+
+/* ---------- Tab bar (Papers / Authors) ---------- */
+.tabs {
+  display: flex;
+  gap: 2px;
+  margin-left: 8px;
+}
+.tabs .tab {
+  background: transparent;
+  border: none;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: 5px;
+  border-bottom: 2px solid transparent;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+.tabs .tab:hover { background: var(--bg-sunk); color: var(--fg); }
+.tabs .tab.active {
+  color: var(--fg);
+  font-weight: 600;
+  border-bottom-color: var(--accent, #4c1d95);
+}
+
+/* Authors + Institutions + Journals + Notes lists reuse the papers-list scaffolding. */
+.authors-list,
+.institutions-list,
+.journals-list,
+.notes-list    { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
+.authors-list li,
+.institutions-list li,
+.journals-list li,
+.notes-list li {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.authors-list li:hover,
+.institutions-list li:hover,
+.journals-list li:hover,
+.notes-list li:hover           { background: var(--bg-sunk); }
+.authors-list li.selected,
+.institutions-list li.selected,
+.journals-list li.selected,
+.notes-list li.selected        { background: var(--bg-selected, #ede9fe); }
+.authors-list[hidden],
+.institutions-list[hidden],
+.journals-list[hidden],
+.notes-list[hidden],
+.papers-list[hidden]           { display: none !important; }
+/* Notes list reuses papers-list's .p-title / .p-meta rules. */
+.notes-list .p-title { font-weight: 500; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.notes-list .p-meta  { font-size: 12px; color: var(--fg-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Author detail reuses .paper-detail visual language — just switch
+   the container element ID. Provide a light class that matches. */
+.author-detail {
+  padding: 20px 24px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg);
+}
+.author-detail .pd-header h1 { margin: 0 0 4px 0; font-size: 20px; }
+.author-detail .pd-authors   { margin: 0 0 12px 0; color: var(--fg-muted); }
+.author-detail dl.pd-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 12px 0 20px 0;
+}
+.author-detail dl.pd-meta dt {
+  font-weight: 600;
+  color: var(--fg-muted);
+  font-size: 12px;
+}
+.author-detail dl.pd-meta dd { margin: 0; }
+.author-detail h3 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--fg-muted);
+  margin: 16px 0 6px 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+.author-detail .pd-affils-list { list-style: none; padding-left: 0; }
+.author-detail .pd-affils-list li { margin: 6px 0; }
+.author-detail .cov-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.author-detail .cov-table th,
+.author-detail .cov-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: 12px;
+}
+.author-detail .cov-table th { font-weight: 600; color: var(--fg-muted); }
+.author-detail .cov-table td:nth-child(n+2) { text-align: center; width: 130px; }
+.author-detail .cov-label { color: var(--fg); }
+.author-detail .cov-yes  { color: var(--ok);      font-weight: 700; }
+.author-detail .cov-no   { color: var(--danger);  font-weight: 700; }
+.author-detail .cov-skip { color: #92400e;        font-weight: 700; }
+.author-detail .cov-na   { color: var(--fg-muted); }
+.author-detail .cov-legend {
+  margin: 10px 0 0 0;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+.author-detail ol { padding-left: 20px; }
+.author-detail ol li { margin: 3px 0; }
+
+/* Author / institution / journal detail — apply the same white-card
+   section treatment as Papers so each block of information visually
+   separates from the next (Jack flagged this as a useful visual
+   indicator that Papers had but the other three didn't).
+   Sections that get boxed: meta grid + every pd-affils / pd-refs /
+   pd-coverage inside these panes. */
+.author-detail dl.pd-meta,
+.author-detail .pd-affils,
+.author-detail .pd-refs,
+.author-detail .pd-coverage,
+.institution-detail dl.pd-meta,
+.institution-detail .pd-affils,
+.institution-detail .pd-refs,
+.institution-detail .pd-coverage,
+.journal-detail dl.pd-meta,
+.journal-detail .pd-affils,
+.journal-detail .pd-refs,
+.journal-detail .pd-coverage {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+/* Section h3 inside the boxes — same treatment as Papers. */
+.author-detail .pd-affils h3,
+.author-detail .pd-refs h3,
+.author-detail .pd-coverage h3,
+.institution-detail .pd-affils h3,
+.institution-detail .pd-refs h3,
+.institution-detail .pd-coverage h3,
+.journal-detail .pd-affils h3,
+.journal-detail .pd-refs h3,
+.journal-detail .pd-coverage h3 {
+  margin: 0 0 10px 0;
+  border-bottom: none;    /* Panel border does the visual separation now. */
+  padding-bottom: 0;
+}
+
+/* Institution detail: reuse the author-detail visual language so the
+   three detail panes feel identical. */
+.institution-detail {
+  padding: 20px 24px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg);
+}
+.institution-detail .pd-header h1 { margin: 0 0 4px 0; font-size: 20px; }
+.institution-detail .pd-authors   { margin: 0 0 12px 0; color: var(--fg-muted); }
+.institution-detail dl.pd-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 12px 0 20px 0;
+}
+.institution-detail dl.pd-meta dt {
+  font-weight: 600;
+  color: var(--fg-muted);
+  font-size: 12px;
+}
+.institution-detail dl.pd-meta dd { margin: 0; }
+.institution-detail h3 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--fg-muted);
+  margin: 16px 0 6px 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+.institution-detail .cov-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.institution-detail .cov-table th,
+.institution-detail .cov-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: 12px;
+}
+.institution-detail .cov-table th { font-weight: 600; color: var(--fg-muted); }
+.institution-detail .cov-table td:nth-child(n+2) { text-align: center; width: 130px; }
+.institution-detail .cov-label { color: var(--fg); }
+.institution-detail .cov-yes   { color: var(--ok);      font-weight: 700; }
+.institution-detail .cov-no    { color: var(--danger);  font-weight: 700; }
+.institution-detail .cov-skip  { color: #92400e;        font-weight: 700; }
+.institution-detail .cov-na    { color: var(--fg-muted); }
+.institution-detail .cov-legend {
+  margin: 10px 0 0 0;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+.institution-detail ol { padding-left: 20px; }
+.institution-detail ol li { margin: 3px 0; }
+.institution-detail ul { padding-left: 20px; }
+.institution-detail ul li { margin: 3px 0; }
+
+/* Refresh-from-source bar (institution detail) — small toolbar with
+   'last updated N ago' pill + refresh button. */
+.pd-refresh {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 14px 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.pd-refresh .btn { padding: 3px 8px; font-size: 11px; }
+
+/* Journal detail: mirror the same shared visual language. */
+.journal-detail {
+  padding: 20px 24px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg);
+}
+.journal-detail .pd-header h1 { margin: 0 0 4px 0; font-size: 20px; }
+.journal-detail .pd-authors   { margin: 0 0 12px 0; color: var(--fg-muted); }
+.journal-detail dl.pd-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 12px 0 20px 0;
+}
+.journal-detail dl.pd-meta dt {
+  font-weight: 600;
+  color: var(--fg-muted);
+  font-size: 12px;
+}
+.journal-detail dl.pd-meta dd { margin: 0; }
+.journal-detail h3 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--fg-muted);
+  margin: 16px 0 6px 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+.journal-detail .cov-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.journal-detail .cov-table th,
+.journal-detail .cov-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: 12px;
+}
+.journal-detail .cov-table th { font-weight: 600; color: var(--fg-muted); }
+.journal-detail .cov-table td:nth-child(n+2) { text-align: center; width: 130px; }
+.journal-detail .cov-label { color: var(--fg); }
+.journal-detail .cov-yes   { color: var(--ok);      font-weight: 700; }
+.journal-detail .cov-no    { color: var(--danger);  font-weight: 700; }
+.journal-detail .cov-skip  { color: #92400e;        font-weight: 700; }
+.journal-detail .cov-na    { color: var(--fg-muted); }
+.journal-detail .cov-legend {
+  margin: 10px 0 0 0;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+.journal-detail ol { padding-left: 20px; }
+.journal-detail ol li { margin: 3px 0; }
+.journal-detail ul { padding-left: 20px; }
+.journal-detail ul li { margin: 3px 0; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  font: inherit;
+  padding: 5px 12px;
+  border: 1px solid var(--border-str);
+  background: var(--bg-panel);
+  color: var(--fg);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.btn:hover:not(:disabled) { background: var(--bg-sunk); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+.btn.primary:hover:not(:disabled) { background: #1d5388; }
+.btn.ghost {
+  border-color: transparent;
+  background: transparent;
+  padding: 3px 8px;
+}
+
+/* ---------- Main layout ---------- */
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  height: calc(100vh - var(--topbar-h));
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-header {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+/* Every filter box in the app — the four sidebar filters and the two
+   modal pickers — is styled here, once.
+
+   The modal ones previously declared only `width` + `margin-bottom`,
+   so they missed the padding and `font: inherit` that make the sidebar
+   boxes legible: the placeholder rendered in the browser's default
+   search font, flush against the border. Visible in Jack's 2026-09-14
+   screenshot, where "Filter papers…" sits clipped at the edge of the
+   box. `.note-link-filter` had the same gap since the notes picker was
+   built; `.pj-picker-filter` inherited it by being modelled on that. */
+.sidebar-header input,
+.pj-picker-filter,
+.note-link-filter {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--border-str);
+  border-radius: 4px;
+  font: inherit;
+}
+/* Sort-by control strip below the sidebar filter. Rendered only for
+   modes that expose sortable lists (Papers today; port to others per
+   the propagate-view-changes rule). Hidden via [hidden] when the
+   active mode doesn't support it. */
+.sidebar-sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sunk);
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+/* Per the [hidden]-beaten-by-display gotcha: any `display: <not-none>`
+   rule beats the plain HTML `[hidden]` default, so an explicitly-scoped
+   override is required. `!important` is belt-and-braces — the attribute
+   selector already outranks the base class, but this is a repeat-offender
+   pattern in Corpus. */
+.sidebar-sort[hidden] { display: none !important; }
+.sidebar-sort-label { flex-shrink: 0; }
+.sidebar-sort-field {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--border-str);
+  border-radius: 3px;
+  font: inherit;
+  background: white;
+}
+.sidebar-sort-dir {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border-str);
+  border-radius: 3px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.sidebar-sort-dir:hover { background: var(--bg-panel); }
+.papers-list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.papers-list li {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.papers-list li:hover { background: var(--bg-sunk); }
+.papers-list li.selected {
+  background: #e6f0fb;
+  border-left: 3px solid var(--accent);
+  padding-left: 9px;
+}
+.papers-list .p-title {
+  font-weight: 500;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.papers-list .p-meta {
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin-top: 2px;
+}
+/* "no DOI" chip — inline after the title so the reason the row shows
+   "unknown / unknown" metadata is immediately obvious (metadata
+   extraction couldn't resolve a DOI for this paper). Amber, tiny,
+   not screamy. */
+.papers-list .p-no-doi {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #7a4a00;
+  background: #fff2c8;
+  border: 1px solid #e6c774;
+  border-radius: 3px;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+/* Whole row gets a faint amber tint so scanning the list makes the
+   no-DOI cluster stand out at a glance. */
+.papers-list li[data-no-doi="true"] {
+  background: rgba(255, 240, 200, 0.35);
+}
+.papers-list li[data-no-doi="true"]:hover {
+  background: rgba(255, 235, 180, 0.55);
+}
+.sidebar-footer {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--fg-muted);
+  border-top: 1px solid var(--border);
+  background: var(--bg-sunk);
+}
+
+/* ---------- Main pane ---------- */
+.main-pane {
+  overflow-y: auto;
+  padding: 20px;
+}
+.empty-state {
+  max-width: 480px;
+  margin: 60px auto;
+  text-align: center;
+}
+.empty-state h2 { font-weight: 600; margin-bottom: 12px; }
+.empty-state p { color: var(--fg-muted); margin-bottom: 20px; }
+
+/* Sub-tabs inside the paper detail pane (Paper info | PDF). Smaller,
+   subtler than the top-level Papers/Authors/Institutions/Journals
+   tabs so the hierarchy reads as: outer tabs = view type, inner
+   subtabs = mode within a single paper. */
+.pd-subtabs {
+  display: flex;
+  gap: 2px;
+  margin: 16px 0 0 0;
+  padding: 0 2px;
+  border-bottom: 1px solid var(--border);
+}
+.pd-subtab {
+  background: transparent;
+  border: none;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;    /* Overlap the border-bottom of .pd-subtabs */
+  transition: color 0.1s, border-color 0.1s;
+}
+.pd-subtab:hover { color: var(--fg); }
+.pd-subtab.active {
+  color: var(--fg);
+  font-weight: 600;
+  border-bottom-color: var(--accent, #4c1d95);
+}
+/* Paper detail: same pattern as .note-detail — flex column, explicit
+   height: 100% (main-pane grid row is the definite parent), overflow
+   hidden so scrolling is delegated to the subpane. This gives the
+   PDF-subtab iframe a definite parent size so `height: 100%` on the
+   iframe resolves to the actual remaining space (info-subtab too,
+   which scrolls internally on tall content). Retraction /
+   extraction-failure banners push the header taller — flex just
+   redistributes. */
+.paper-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+/* `display: flex` beats the browser's default `[hidden] {display:none}`
+   — without this the pane stays visible after switching to another
+   tab. Mirrors the same fix on `.note-detail`. */
+.paper-detail[hidden] { display: none !important; }
+
+.pd-subpane {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: 8px;
+}
+.pd-subpane[hidden] { display: none !important; }
+
+/* PDF subpane holds the frame-and-gutter row: iframe on the left,
+   optional right gutter for anchored notes. When note-mode is off the
+   gutter collapses to zero width. When on it opens to ~25% with a
+   soft transition. The Note Mode toggle button itself lives INSIDE
+   the PDF.js iframe's toolbar (see corpus-highlights.js) so all three
+   PDF controls sit together; the iframe posts up a message on toggle
+   to flip the .note-mode class on this container. */
+.pd-subpane-pdf {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* Explicit override per the [hidden]-beaten-by-display gotcha —
+   any display:<not-none> beats the plain [hidden] default. */
+.pd-subpane-pdf[hidden] { display: none !important; }
+
+.pdf-frame-and-gutter {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 8px;
+}
+.pdf-frame-and-gutter .pdf-viewer {
+  flex: 1 1 auto;
+}
+.pdf-note-gutter {
+  flex: 0 0 0;
+  width: 0;
+  overflow: hidden;
+  transition: flex-basis 180ms ease, width 180ms ease;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: var(--bg-sunk);
+}
+.pd-subpane-pdf.note-mode .pdf-note-gutter {
+  flex: 0 0 25%;
+  width: 25%;
+  overflow-y: auto;
+  border-color: var(--border);
+  padding: 12px;
+}
+.pdf-note-gutter-empty {
+  color: var(--fg-muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 20px 4px;
+  line-height: 1.4;
+}
+/* Absolutely-positioned canvas inside the gutter, sized to the PDF's
+   scrollable content height. Cards live inside it at `top: <anchor-y>`
+   so scrolling the gutter aligns them with their highlights across
+   pages. See _renderNoteGutter for the collision push-down logic. */
+.pdf-note-gutter-inner {
+  position: relative;
+  width: 100%;
+}
+
+/* One card per anchored note. Card carries a thin colored spine on the
+   left showing the source highlight's color, plus a growing textarea.
+   Positioned absolutely at its highlight's y in the PDF's content
+   coordinate system; overlapping cards get pushed down by a collision
+   pass in _renderNoteGutter (step 7 of the plan). */
+.pdf-note-card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.pdf-note-card-anchor {
+  flex: 0 0 3px;
+  border-radius: 2px;
+}
+.pdf-note-card-text {
+  flex: 1;
+  min-height: 60px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+  background: white;
+}
+.pdf-note-card-text:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Ping animation for the "click a highlight → find its note" flow.
+   Applied briefly (~1s) via .pinged; two pulses of an accent-colored
+   ring around the card so the user can see which one matches. Class
+   removed at the end so re-triggering restarts the animation cleanly
+   (see _pingNoteCard). */
+.pdf-note-card.pinged {
+  animation: pdf-note-ping 1s ease-out;
+}
+@keyframes pdf-note-ping {
+  0%   { box-shadow: 0 0 0 0    rgba(74, 158, 255, 0.7); border-color: var(--accent); }
+  40%  { box-shadow: 0 0 0 6px  rgba(74, 158, 255, 0.0); border-color: var(--accent); }
+  60%  { box-shadow: 0 0 0 0    rgba(74, 158, 255, 0.7); border-color: var(--accent); }
+  100% { box-shadow: 0 0 0 6px  rgba(74, 158, 255, 0.0); border-color: var(--border); }
+}
+
+/* PDF viewer fills its now-definite-height subpane. */
+.pdf-viewer {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+/* ---- Pop-out: full-area placeholder in the main window --------------
+   When a paper is popped out to a separate window, the main window's
+   paper detail replaces the subtabs + both subpanes with this
+   placeholder. Info and PDF are both locked behind the same panel so
+   the user can't scroll or edit either from here — they interact with
+   the paper in the other window instead. */
+.pd-detached-full {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pdf-detached-placeholder {
+  text-align: center;
+  color: var(--fg-muted);
+  padding: 32px;
+  border: 1px dashed var(--border-str);
+  border-radius: 8px;
+  background: var(--bg-sunk);
+  max-width: 420px;
+}
+.pdf-detached-placeholder p { margin: 0 0 16px 0; font-size: 14px; }
+.pdf-detached-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* ---- Detached-window layout ----------------------------------------
+   When Corpus is loaded with `#detached=<slug>` the boot code adds
+   `corpus-detached` to <body>. Detached mode is essentially the normal
+   paper detail (header + Paper info / PDF subtabs + active subpane)
+   minus the outer Corpus chrome (topbar, top tabs, sidebar) plus a
+   small padding buffer so content doesn't crash into the window edge.
+   Subtabs work as usual — each subpane takes the full window when
+   selected. */
+body.corpus-detached .topbar,
+body.corpus-detached .tabs,
+body.corpus-detached .sidebar {
+  display: none !important;
+}
+body.corpus-detached .main-pane { padding: 0; }
+/* Topbar is hidden, so layout takes the full viewport height (default
+   subtracts --topbar-h). */
+body.corpus-detached .layout {
+  grid-template-columns: 1fr;
+  height: 100vh;
+}
+body.corpus-detached .paper-detail { padding: 10px 12px 8px; }
+
+/* Detached header compaction (bug 20260827-122449).
+   A popped-out window exists to read the PDF, so every pixel the header
+   takes is a pixel of paper the user doesn't see. Measured at 1728x1048
+   the header was ~215px: five stacked metadata rows on the left (~143px)
+   beside FOUR action buttons stacked vertically (~146px).
+
+   These overrides are detached-only on purpose. The docked pane sits
+   next to a 340px sidebar, where a horizontal button row would squeeze
+   the title; the detached window is full-width and has room. */
+
+/* Biggest single win: the action buttons were a column. */
+body.corpus-detached .pd-head-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+body.corpus-detached .pd-head { margin-bottom: 8px; gap: 12px; }
+
+/* "Pop out" in an already-popped-out window re-focuses the window you
+   are looking at. A control that does nothing is worse than no control,
+   so it goes. */
+body.corpus-detached #btn-pop-out { display: none; }
+
+/* Source file / Summary / Last updated are reference lines, not reading
+   material. Kept (the source path is how you know WHICH pdf you have
+   when extraction fell back to the slug) but folded onto one line. */
+body.corpus-detached .pd-source-file,
+body.corpus-detached .paper-detail .pd-updated {
+  display: inline;
+  margin: 0 12px 0 0;
+  font-size: 11px;
+}
+body.corpus-detached .pd-head-titles h1 { font-size: 15px; margin-bottom: 3px; }
+body.corpus-detached .paper-detail .pd-authors { font-size: 12px; margin-bottom: 3px; }
+
+/* Filename indicator under the title — always visible so the user
+   knows which PDF they're looking at, particularly useful when
+   extraction failed and the title falls back to the slug. */
+.pd-source-file {
+  margin: 4px 0;
+  font-size: 12px;
+}
+.pd-source-file code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: var(--bg-sunk);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.pd-source-file-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pd-source-file-link:hover code {
+  background: #ede9fe;
+  outline: 1px solid #a78bfa;
+}
+/* Prominent banner when extraction failed — amber so it reads as a
+   warning, not an error. Above the meta grid so it's the first thing
+   the user sees. */
+.pd-extract-fail {
+  margin: 8px 0 12px 0;
+  padding: 10px 14px;
+  background: #fef3c7;
+  border-left: 4px solid #d97706;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #78350f;
+  line-height: 1.5;
+}
+.pd-extract-fail strong { display: block; margin-bottom: 4px; }
+.pd-extract-fail code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: rgba(255,255,255,0.5);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.pd-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.pd-head-titles { flex: 1; }
+.pd-head-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  white-space: nowrap;
+}
+.paper-detail h1 {
+  font-size: 20px;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.paper-detail .warn { color: var(--danger); font-size: 13px; }
+.paper-detail .muted { color: var(--fg-muted); font-size: 13px; }
+.paper-detail code {
+  background: var(--bg-sunk);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+/* Per-field provenance badges. First = winner (green), rest = verifiers
+   (blue, muted). Slug = filename-derived, styled as amber to signal
+   'weak' provenance. */
+/* Provenance badges are shared across paper detail + author detail
+   (and anywhere else in Corpus that surfaces per-field source info).
+   Scope on the class alone so any renderer can drop the same
+   provBadge()/provFromArr() output in and get pills. */
+.prov {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.prov-tag {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid;
+  font-weight: 700;
+  line-height: 1.4;
+  min-width: 14px;
+  text-align: center;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.prov-tag.win  { background: #d1fae5; border-color: #6ee7b7; color: #065f46; }
+.prov-tag.ver  { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
+.prov-tag.slug { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+
+/* Author block layout — one row per author, nested list per affiliation. */
+.paper-detail .pd-affils .author-block {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.paper-detail .pd-affils .author-block:last-of-type {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.paper-detail .pd-affils .author-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.paper-detail .pd-affils .affil-list {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 13px;
+  color: var(--fg);
+}
+.paper-detail .pd-affils .affil-list li {
+  margin: 3px 0;
+}
+.paper-detail .pd-affils .no-info {
+  color: var(--fg-muted);
+  font-style: italic;
+  font-size: 12px;
+  padding-left: 4px;
+}
+
+/* TLDR card — subtle amber tint so it visually distinguishes from the
+   Abstract card (Abstract is longer, TLDR is a quick-scan two-liner). */
+.paper-detail .pd-tldr {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 6px;
+}
+.paper-detail .pd-tldr h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #78350f;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.paper-detail .pd-tldr p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #451a03;
+}
+
+/* Fields of Study card — same shape as Subjects. Chip variants
+   distinguish where each tag came from (external DB vs SS's ML model). */
+.paper-detail .pd-fos {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.paper-detail .pd-fos h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.paper-detail .pd-fos p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* mini-tag styles removed — only C/SS/OA source-provenance pills
+   remain. Position / corresponding / ORCID / publication-types /
+   version tags all render as plain muted text now. */
+
+/* Retraction banner — high-contrast red at the top of the detail pane. */
+.paper-detail .retracted-banner {
+  background: #fee2e2;
+  color: #7f1d1d;
+  border: 1px solid #f87171;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.paper-detail .retracted-banner a {
+  color: #7f1d1d;
+  text-decoration: underline;
+}
+
+/* Abstract, subjects, funder, license blocks — same card style as
+   affiliations / references. */
+.paper-detail .pd-abstract,
+.paper-detail .pd-subjects,
+.paper-detail .pd-funder,
+.paper-detail .pd-license {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.paper-detail .pd-abstract h3,
+.paper-detail .pd-subjects h3,
+.paper-detail .pd-funder h3,
+.paper-detail .pd-license h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.paper-detail .pd-abstract p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.paper-detail .pd-subjects p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.paper-detail .pd-funder ul,
+.paper-detail .pd-license ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.paper-detail .pd-funder li,
+.paper-detail .pd-license li {
+  margin: 3px 0;
+}
+
+/* Coverage table — per-source per-field ✓ / ✗ / n/a matrix at the
+   bottom of the paper detail. Compact so it's data-dense but doesn't
+   dominate the pane. */
+.paper-detail .pd-coverage {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.paper-detail .pd-coverage h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.paper-detail .cov-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+.paper-detail .cov-table th {
+  text-align: left;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  color: var(--fg-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.paper-detail .cov-table th:not(:first-child) { text-align: center; width: 130px; }
+.paper-detail .cov-table td {
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--bg-sunk);
+}
+.paper-detail .cov-table td:not(:first-child) { text-align: center; }
+.paper-detail .cov-table tr:last-child td { border-bottom: none; }
+.paper-detail .cov-label { color: var(--fg); }
+.paper-detail .cov-yes { color: var(--ok);      font-weight: 700; }
+.paper-detail .cov-no  { color: var(--danger);  font-weight: 700; }
+.paper-detail .cov-skip { color: #92400e;       font-weight: 700; }  /* amber — deliberate skip */
+.paper-detail .cov-na  { color: var(--fg-muted); }
+.paper-detail .cov-legend {
+  margin: 10px 0 0 0;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+/* Topics list — hierarchical breadcrumb per topic */
+.paper-detail .topics-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.paper-detail .topics-list li { margin: 2px 0; }
+
+/* Retraction notice — inline text under the banner */
+.paper-detail .retraction-notice {
+  margin-top: 8px;
+  font-size: 13px;
+  font-style: italic;
+  padding-top: 8px;
+  border-top: 1px solid #f87171;
+}
+
+/* Citations-by-year chart — a compact horizontal bar list */
+.paper-detail .cby-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+.paper-detail .cby-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 40px;
+  gap: 6px;
+  align-items: center;
+}
+.paper-detail .cby-year {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--fg-muted);
+}
+.paper-detail .cby-bar {
+  height: 10px;
+  background: linear-gradient(90deg, #2b6cb0, #63b3ed);
+  border-radius: 2px;
+  min-width: 2px;
+}
+.paper-detail .cby-count {
+  text-align: right;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.paper-detail .pd-authors {
+  color: var(--fg-muted);
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+.paper-detail .pd-updated {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  margin-bottom: 16px;
+}
+.paper-detail .pd-meta {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 6px 16px;
+  margin: 18px 0;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.paper-detail .pd-meta dt {
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+.paper-detail .pd-meta dd {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  word-break: break-word;
+}
+.paper-detail .pd-affils {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.paper-detail .pd-affils h3,
+.paper-detail .pd-refs h3,
+.paper-detail .pd-citers h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.paper-detail .pd-affils ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.paper-detail .pd-affils li { margin: 3px 0; font-size: 13px; }
+/* Citers share the References box exactly — the two lists are the two
+   directions of one citation, and read as a pair. */
+.paper-detail .pd-refs,
+.paper-detail .pd-citers {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.paper-detail .pd-refs ol,
+.paper-detail .pd-citers ol {
+  margin: 0;
+  padding-left: 24px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.paper-detail .pd-refs li,
+.paper-detail .pd-citers li { margin: 4px 0; }
+.paper-detail .pd-citers h4 {
+  margin: 12px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+.paper-detail .pd-citers-meta { margin: 0 0 4px; font-size: 12px; }
+.paper-detail .pd-citers-meta .btn { margin-left: 6px; }
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+/* `display: flex` above beats `[hidden] { display: none }` on specificity
+   alone (both are 0-1-0), so we spell it out — otherwise setting
+   `modal.hidden = true` in JS leaves the overlay visible. */
+.modal-overlay[hidden],
+.toast[hidden] { display: none !important; }
+.modal {
+  background: var(--bg-panel);
+  border-radius: 8px;
+  width: 540px;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+.modal-header, .modal-footer {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.modal-footer {
+  border-top: 1px solid var(--border);
+  border-bottom: 0;
+  justify-content: flex-end;
+}
+.modal-header h2 { flex: 1; margin: 0; font-size: 16px; font-weight: 600; }
+.modal-body {
+  padding: 18px;
+  overflow-y: auto;
+}
+.field { margin-bottom: 20px; }
+.field:last-child { margin-bottom: 0; }
+.field label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.field .row {
+  display: flex;
+  gap: 8px;
+}
+.field .row input { flex: 1; }
+.field input[type=text],
+.field input[type=email],
+.field input[type=password] {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border-str);
+  border-radius: 4px;
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.field .hint {
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin: 4px 0 0 0;
+}
+.field .hint code {
+  background: var(--bg-sunk);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.status { font-size: 12px; font-weight: normal; color: var(--fg-muted); margin-left: 6px; }
+.status.set { color: var(--ok); }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--fg);
+  color: var(--bg-panel);
+  padding: 10px 18px;
+  border-radius: 6px;
+  z-index: 200;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  max-width: 80vw;
+  font-size: 13px;
+}
+.toast.ok    { background: var(--ok); }
+.toast.err   { background: var(--danger); }
+
+/* ---------- Notes ---------- */
+/* Rich-text note editor. Kept visually close to the paper-detail
+   header layout so the two panes feel like the same UI. */
+.note-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 20px 20px;
+  overflow: hidden;
+}
+/* `display: flex` above beats the browser's default `[hidden] {
+   display: none }` — without this rule, switching to any other tab
+   left the note pane on screen AND kept its layout, so the papers
+   pane's scroll extended by however tall the note happened to be.
+   Explicit override with attribute selector (higher specificity than
+   the class alone). */
+.note-detail[hidden] { display: none !important; }
+.note-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+/* Shown when the server refused a save because the note changed in
+   another window. Loud on purpose: what is on screen is NOT saved. */
+.note-conflict {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  font-size: 13px;
+}
+.note-conflict span { flex: 1; min-width: 200px; }
+.note-title-input {
+  flex: 1;
+  font-size: 22px;
+  font-weight: 600;
+  border: none;
+  outline: none;
+  padding: 4px 0;
+  background: transparent;
+  color: var(--fg);
+  min-width: 0;
+}
+.note-title-input:focus { border-bottom: 1px solid var(--border-str); }
+.note-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* Note settings dropdown (notes.js::_wireNoteSettings). Anchored under
+   its button, right-aligned so it never runs off the pane's edge. Item
+   styling reuses the table menu's classes. */
+.note-settings { position: relative; }
+.note-settings-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 10001;
+  min-width: 180px;
+  padding: 0 0 4px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-str);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  font-size: 13px;
+}
+/* A display rule anywhere would beat [hidden]; keep it closed. */
+.note-settings-menu[hidden] { display: none !important; }
+.note-settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 6px 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+.note-settings-close {
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.note-settings-close:hover { background: var(--bg-sunk); color: var(--fg); }
+.note-status {
+  font-size: 12px;
+  color: var(--fg-muted);
+  min-width: 60px;
+  text-align: right;
+}
+.note-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.note-tb-btn {
+  min-width: 30px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.note-tb-btn:hover  { background: var(--bg-sunk); border-color: var(--border); }
+.note-tb-btn:active { background: var(--border); }
+/* Visual break between button groups (bold/etc | font sizes | lists | clear). */
+.note-tb-sep {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 4px 6px;
+  vertical-align: middle;
+}
+.note-body {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--fg);
+  outline: none;
+  padding: 4px 2px 40px;
+  min-height: 200px;
+}
+.note-body:focus { outline: none; }
+.note-body:empty::before {
+  content: "Start writing…";
+  color: var(--fg-muted);
+  pointer-events: none;
+}
+.note-body h2 { font-size: 18px; margin: 16px 0 6px; }
+.note-body h3 { font-size: 15px; font-weight: 600; margin: 12px 0 4px; }
+.note-body p  { margin: 0 0 10px; }
+.note-body ul, .note-body ol { margin: 0 0 10px; padding-left: 24px; }
+.note-body li { margin-bottom: 4px; }
+/* Nested-list markers cycle by depth so indented items are visually
+   distinct. Unordered: filled disc → hollow circle → square. Ordered:
+   1. → a. → i. Same convention as most word processors. Depth 4+
+   restarts the cycle. */
+.note-body ul                          { list-style-type: disc; }
+.note-body ul ul                       { list-style-type: circle; }
+.note-body ul ul ul                    { list-style-type: square; }
+.note-body ul ul ul ul                 { list-style-type: disc; }
+.note-body ol                          { list-style-type: decimal; }
+.note-body ol ol                       { list-style-type: lower-alpha; }
+.note-body ol ol ol                    { list-style-type: lower-roman; }
+.note-body ol ol ol ol                 { list-style-type: decimal; }
+
+/* Phantom parent <li> — created when the user indents the first item
+   of a list. It exists ONLY to hold the nested sub-list (HTML spec:
+   <ul> can only contain <li>). Hiding its marker keeps the visual
+   focused on the actual content. Sanitiser only allows this exact
+   class value on <li> (see notes_api.py). */
+.note-body li.li-phantom { list-style: none; }
+
+/* A phantom's inner list is a visual indent, not a semantic nesting
+   level — its items are logically still top-tier (they were before
+   the user tabbed the first one). Reset the marker so they show
+   the same style as the outer list would have. Higher specificity
+   than the generic `.note-body ul ul { list-style-type: circle }`
+   cycling rules above, so this wins. Real nesting INSIDE a phantom's
+   items still cycles normally (ul ul under a phantom-inner ul still
+   picks up the circle rule via the descendant selector). */
+.note-body li.li-phantom > ul { list-style-type: disc; }
+.note-body li.li-phantom > ol { list-style-type: decimal; }
+.note-body blockquote {
+  margin: 8px 0;
+  padding: 4px 12px;
+  border-left: 3px solid var(--border-str);
+  color: var(--fg-muted);
+}
+.note-body a { color: var(--accent); text-decoration: underline; }
+/* Font-size number input in the toolbar. Word-processor style: type
+   a value, hit Enter (or blur), size applies to the current
+   selection. Range enforced by min/max attrs + server clamp. */
+.note-tb-fs {
+  width: 46px;
+  height: 28px;
+  padding: 0 4px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--fg);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  text-align: center;
+  margin: 0 2px;
+}
+.note-tb-fs:focus { outline: none; border-color: var(--accent); }
+.note-body code {
+  background: var(--bg-sunk);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 90%;
+  font-family: ui-monospace, Menlo, monospace;
+}
+.note-body pre {
+  background: var(--bg-sunk);
+  padding: 10px 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 13px;
+}
+.note-meta-line {
+  font-size: 11px;
+  color: var(--fg-muted);
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.note-empty {
+  padding: 40px 20px;
+  color: var(--fg-muted);
+}
+.note-empty h2 { color: var(--fg); margin: 0 0 12px; }
+.note-empty code {
+  background: var(--bg-sunk);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 90%;
+}
+
+/* ---------- Note tables ---------- */
+/* Fixed layout so col widths honour our inline styles instead of the
+   browser's content-based auto-sizing. Border-collapse keeps single
+   1px lines between cells. */
+.note-body table.note-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 12px 0;
+  max-width: 100%;
+  background: var(--bg-panel);
+}
+.note-body table.note-table td,
+.note-body table.note-table th {
+  border: 1px solid var(--border-str);
+  padding: 4px 8px;
+  vertical-align: top;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+.note-body table.note-table th {
+  background: var(--bg-sunk);
+  font-weight: 600;
+}
+/* Table right-click menu. Fixed-positioned floater, dismissed on any
+   outside click. Kept visually plain so it doesn't compete with the
+   toolbar's chip aesthetic. */
+.note-table-menu {
+  position: fixed;
+  z-index: 10001;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-str);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  padding: 4px 0;
+  min-width: 180px;
+  font-size: 13px;
+}
+.note-table-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 14px;
+  background: transparent;
+  color: var(--fg);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.note-table-menu-item:hover { background: var(--bg-sunk); }
+/* Destructive entries (delete table, remove link) — same treatment as
+   the PDF highlight menu's remove action. */
+.note-table-menu-item-danger { color: var(--danger); }
+.note-table-menu-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* ---------- In-corpus citation links ----------
+   Papers this paper cites, and papers citing it, restricted to papers
+   the user actually has. Both directions are derived server-side by
+   citations.py; nothing here is stored on disk. */
+.pd-links {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.pd-links h4 {
+  margin: 10px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--fg-muted);
+}
+.pd-links h4:first-of-type { margin-top: 0; }
+.pd-links-list { margin: 0; padding-left: 18px; }
+.pd-links-list li { margin: 2px 0; }
+.pd-links-slug { font-size: 11px; margin-left: 6px; }
+.pd-links-note { margin-top: 10px; font-size: 12px; }
+/* Empty state for a direction with no links. Always rendered — an
+   omitted section reads as a missing feature rather than as an answer. */
+.pd-links-empty { margin: 0; font-size: 12px; font-style: italic; }
+
+/* Inline "In corpus: <slug>" chip on a reference that resolves to
+   another paper in the corpus. Deliberately quiet — most references
+   point outside the corpus, so the chip marks the exception. */
+.ref-incorpus {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 11px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ref-incorpus:hover { text-decoration: underline; }
+
+/* ---------- Note entity links ----------
+   A link from a note to a paper / author / institution / journal.
+   Styled as running text with an accent underline rather than a chip:
+   these sit inside sentences, and a pill would break the line. */
+.note-body a.note-entity-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.note-body a.note-entity-link:hover { text-decoration-style: solid; }
+
+/* Insert-link picker. Reuses .modal-overlay/.modal so it inherits the
+   Settings dialog's chrome and the Modals focus rules. */
+.note-link-modal { width: min(560px, 92vw); }
+.note-link-types { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.note-link-type { text-transform: capitalize; }
+.note-link-type.active {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+}
+/* Filter + "Sort by" + direction on one row (sort added 2026-09-28). */
+.note-link-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.note-link-controls .note-link-filter { flex: 1; min-width: 0; margin-bottom: 0; }
+.note-link-sort-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+/* The display rules above would beat [hidden]; a type with no sort
+   options hides both controls. */
+.note-link-sort-label[hidden], .note-link-sort-dir[hidden] { display: none !important; }
+.note-link-sort-dir { min-width: 32px; }
+.note-link-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 46vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.note-link-results li { border-bottom: 1px solid var(--border); }
+.note-link-results li:last-child { border-bottom: none; }
+.note-link-hit {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.note-link-hit:hover { background: var(--bg-panel); }
+.note-link-empty { padding: 10px; }
+
+/* Corpus path shown in the empty state when a corpus IS set but holds
+   no papers. Monospace because it is a path the user needs to READ
+   carefully — the whole point is spotting that it is the wrong one. */
+.empty-state-path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--fg-muted);
+  background: var(--bg-sunk);
+  padding: 6px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  margin: 4px 0 12px;
+  max-width: 90%;
+  overflow-wrap: anywhere;
+}
+.empty-state-path[hidden] { display: none !important; }
+
+/* ---------- Projects ---------- */
+
+.btn.danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.btn.danger:hover { background: var(--danger); color: #fff; }
+
+.project-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 20px 20px;
+  overflow-y: auto;
+}
+/* Same trap `.note-detail` documents: `display: flex` above beats the
+   browser default `[hidden] { display: none }`, so without this the
+   project pane stays on screen after switching tabs. Attribute
+   selector for the specificity. */
+.project-detail[hidden] { display: none !important; }
+
+.pj-head { display: flex; align-items: center; gap: 10px; }
+.pj-title {
+  flex: 1;
+  font-size: 20px;
+  font-weight: 650;
+  color: var(--fg);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+.pj-title:hover  { border-color: var(--border); }
+.pj-title:focus  { border-color: var(--accent); outline: none; background: var(--bg-sunk); }
+.pj-desc {
+  margin: 8px 0 4px;
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg-sunk);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+.pj-meta { color: var(--fg-muted); font-size: 12px; margin-bottom: 14px; }
+
+.pj-section { margin-bottom: 18px; }
+.pj-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.pj-section-head h3 { margin: 0; font-size: 14px; flex: 1; }
+.pj-count {
+  color: var(--fg-muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+.pj-member-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.pj-member-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.pj-member-list li:last-child { border-bottom: none; }
+.pj-member-open { flex: 1; color: var(--accent); text-decoration: none; cursor: pointer; }
+.pj-member-open:hover { text-decoration: underline; }
+.pj-remove { padding: 0 6px; line-height: 1.6; color: var(--fg-muted); }
+.pj-remove:hover { color: var(--danger); border-color: var(--danger); }
+.pj-empty { color: var(--fg-muted); padding: 8px 10px; }
+
+.pj-picker-modal { width: min(560px, 92vw); }
+.pj-picker-filter { margin-bottom: 8px; }
+.pj-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 46vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.pj-picker-list li { border-bottom: 1px solid var(--border); }
+.pj-picker-list li:last-child { border-bottom: none; }
+.pj-picker-row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.pj-picker-row:hover { background: var(--bg-sunk); }
+
+/* A project this paper is already filed into. Used only by the
+   paper-side picker, which lists every project and toggles on click —
+   the project-side one filters members out before rendering, so no row
+   there is ever a member.
+
+   The tick is a ::before rather than markup so the label text stays
+   exactly the project title: the filter matches against the source row,
+   and a checkmark baked into the label would be one more thing for a
+   future "why doesn't search find it" to trip over. Space is reserved
+   on EVERY row so ticking one does not shift the list sideways. */
+.pj-picker-row::before {
+  content: "";
+  display: inline-block;
+  width: 1.1em;
+  color: var(--accent, currentColor);
+}
+.pj-picker-row.is-member::before { content: "✓"; }
+.pj-picker-row.is-member { font-weight: 600; }
+
+.project-empty { padding: 40px 20px; color: var(--fg-muted); }
+.project-empty h2 { color: var(--fg); margin: 0 0 12px; }
+.project-empty code {
+  background: var(--bg-sunk);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 90%;
+}
+
+/* ---------- Citation bridges ---------- */
+
+.pd-bridges { margin-top: 14px; }
+.pd-bridges h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; }
+.pd-bridge-btn { margin-left: auto; font-size: 12px; padding: 2px 8px; }
+.pd-bridge-list { list-style: none; margin: 0; padding: 0; }
+.pd-bridge {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  margin-bottom: 6px;
+}
+.pd-bridge-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.pd-bridge-head a { color: var(--accent); text-decoration: none; }
+.pd-bridge-head a:hover { text-decoration: underline; }
+.pd-bridge-hops {
+  background: var(--bg-sunk);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 7px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.pd-bridge-mids { list-style: none; margin: 5px 0 0; padding: 0 0 0 10px; }
+.pd-bridge-mids li { display: flex; gap: 8px; align-items: baseline; font-size: 13px; }
+.pd-bridge-mid { flex: 1; }
+.pd-bridge-meta { white-space: nowrap; font-size: 12px; }
+
+/* ---------- Job progress ---------- */
+
+/* Floats over the page instead of sitting in the layout.
+   Jack, 2026-09-21: it "blocks out the total paper count at the bottom
+   bc it pushes it down" — in the document flow it added its own height
+   above a full-height layout, shoving the sidebar footer off-screen.
+   Bottom-right keeps it clear of that footer, which is bottom-left. */
+.job-progress {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 900;
+  width: min(460px, calc(100vw - 32px));
+  padding: 9px 14px;
+  background: var(--bg-sunk);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  font-size: 13px;
+}
+/* `padding` above does not beat `[hidden]`, but every other pane in
+   this file has needed an explicit override and the next edit here is
+   one `display:` away from the same bug. */
+.job-progress[hidden] { display: none !important; }
+.jp-line { display: flex; align-items: baseline; gap: 10px; }
+.jp-job { font-weight: 650; }
+/* The phase name is the only elastic part of the line, so a long phase
+   ("Naming connecting papers") truncates instead of pushing the anchored
+   meta slots out of position. */
+.jp-phase { color: var(--fg); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* Each value gets its OWN fixed-width slot, right-aligned, with
+   tabular digits (every numeral the same width).
+
+   Jack, 2026-09-22: "its still shifting the text as the characters
+   change. make each text its own thing that is anchored." One shared
+   right-aligned box was not enough — "9s" growing to "10s" pushed the
+   step and count text left inside it. A fixed width per slot means a
+   value can only change within its own box: nothing else moves, and an
+   absent value holds its space instead of collapsing.
+
+   Widths are worst-case content: "step 7 of 7", "1108/1108", "100:05". */
+.jp-meta {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+  color: var(--fg-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.jp-step  { width: 11ch; text-align: right; }
+.jp-count { width:  9ch; text-align: right; }
+.jp-time  { width:  6ch; text-align: right; }
+.jp-detail {
+  color: var(--fg-muted);
+  font-size: 12px;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jp-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-top: 5px;
+  overflow: hidden;
+}
+.jp-fill { height: 100%; background: var(--accent); transition: width .25s ease; }
+.jp-ok  { color: var(--fg-muted); }
+.jp-err { color: var(--danger); }
+
+/* ---------- Back / forward ---------- */
+
+.navarrows { display: flex; gap: 4px; margin-left: 10px; }
+.navarrow {
+  padding: 2px 9px;
+  font-size: 15px;
+  line-height: 1.4;
+  min-width: 30px;
+}
+/* Disabled must read as "nowhere to go", not as a dead control — the
+   arrows sit next to always-live tabs. */
+.navarrow:disabled { opacity: .35; cursor: default; }
+
+/* ---------- Detached note workspace ---------- */
+/* Note on the left, PDF panel on the right. Only in a popped-out note
+   window — the docked Notes tab keeps its single-pane layout. */
+
+.note-workspace { display: flex; height: 100%; min-height: 0; }
+/* `display: flex` beats the browser's `[hidden] {display:none}`, the
+   same trap `.note-detail` documents. */
+.note-workspace[hidden] { display: none !important; }
+
+.nw-note { flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.nw-panel {
+  flex: 1 1 50%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+}
+.nw-panel[hidden] { display: none !important; }
+/* With the panel closed the note takes the whole window. */
+.note-workspace:not(.nw-open) .nw-note { flex-basis: 100%; }
+
+.nw-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sunk);
+}
+.nw-panel-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nw-panel-body { flex: 1; min-height: 0; }
+.nw-panel-body iframe { width: 100%; height: 100%; border: 0; }
+
+/* Info / PDF switch in the note window's panel. */
+.nw-panel-tabs { display: flex; gap: 2px; margin-left: auto; margin-right: 6px; }
+.nw-panel-tabs[hidden] { display: none !important; }
+.nw-panel-pane { height: 100%; }
+/* `height` is not `display`, but the next edit here will be; guard now. */
+.nw-panel-pane[hidden] { display: none !important; }
+.nw-info { overflow-y: auto; padding: 14px 18px; font-size: 0.92em; line-height: 1.45; }
+.nw-info-muted, .nw-busy-hint { color: var(--fg-muted); }
+.nw-panel-empty { padding: 30px 20px; color: var(--fg-muted); font-size: 13px; }
+
+/* Armed highlight-pick mode — the whole window says so, because the
+   click that matters happens in the PDF iframe. */
+body.corpus-picking .nw-panel-head { background: var(--accent); color: var(--accent-fg); }
+body.corpus-picking .nw-panel-title::after { content: " — click a highlight"; font-weight: 400; }
+
+/* Detached NOTE window. The generic `corpus-detached` rules above
+   already strip the topbar, tabs and sidebar; these size the split so
+   the workspace fills the window and the note editor can scroll
+   independently of the PDF. */
+body.corpus-detached-note .main-pane { padding: 0; overflow: hidden; }
+body.corpus-detached-note .note-workspace { height: 100vh; }
+body.corpus-detached-note .nw-note { padding: 12px 16px; overflow-y: auto; }
+/* The editor fills its half rather than the fixed height it uses when
+   docked beside the sidebar. */
+body.corpus-detached-note .nw-note .note-detail,
+body.corpus-detached-note .nw-note .note-body { height: auto; flex: 1; }
+
+/* Documents: the in-place rename field takes the title's place and size. */
+.doc-title-input {
+  font: inherit;
+  width: 100%;
+  padding: 2px 6px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--bg);
+  color: inherit;
+}

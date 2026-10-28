@@ -1,0 +1,7 @@
+# Build-only dependencies. Not installed at runtime, not shipped in
+# the bundle. Install with:
+#   .venv/bin/pip install -r requirements-build.txt
+#
+# Runtime deps live in requirements.txt.
+
+pyinstaller>=6.0
