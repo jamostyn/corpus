@@ -128,6 +128,14 @@ def _enrichable_detail(aggregate_fn, key, id_getter, enricher):
 
 # ---------- Journals aggregate + endpoints --------------------------
 
+def latest_added(stamps) -> str:
+    """When an author / institution / journal was last added to: the
+    newest `added_at` among its papers ("" when none has one). ISO-8601
+    stamps compare correctly as strings. Gives these lists the same
+    "Date added" sort papers have (2026-10-29)."""
+    return max((s for s in stamps if s and s != "unknown"), default="")
+
+
 def _aggregate_journals() -> dict:
     """Walk every summary and merge venue-level metadata into one
     journal record per canonical key. Also stitches which sources
@@ -197,6 +205,7 @@ def _aggregate_journals() -> dict:
             "slug":  slug,
             "title": str(fm.get("title") or "").strip(),
             "year":  str(fm.get("year") or "").strip(),
+            "added_at": str(fm.get("added_at") or "").strip(),
         })
         for src in fm.get("publisher_from") or []:
             rec["sources_seen"].add(src)
@@ -227,6 +236,7 @@ def list_journals():
             "venue_type":        j["venue_type"] or j["ss_venue_type"],
             "num_papers":        len(j["papers"]),
             "year_range":        j["year_range"],
+            "added_at":          latest_added(p.get("added_at") for p in j["papers"]),
         })
     rows.sort(key=lambda r: (str(r["name"]).lower(),))
     return jsonify(rows)
@@ -290,6 +300,7 @@ def _aggregate_institutions() -> dict:
             })
             for p in a.get("papers") or []:
                 rec["papers"].add(p["slug"])
+                rec.setdefault("added", {})[p["slug"]] = p.get("added_at") or ""
         # sources_seen — inherit union of the author's institutions_from
         # (which sources contributed institution data at all for this
         # author). Aggregate per institution too.
@@ -348,6 +359,7 @@ def list_institutions():
             "type":         i["type"],
             "num_authors":  len(i["authors"]),
             "num_papers":   len(i["papers"]),
+            "added_at":     latest_added((i.get("added") or {}).values()),
         })
     rows.sort(key=lambda r: (str(r["name"]).lower(),))
     return jsonify(rows)
@@ -500,6 +512,7 @@ def _aggregate_authors() -> dict:
                 "slug":      slug,
                 "title":     paper_title,
                 "year":      paper_year,
+                "added_at":  str(fm.get("added_at") or "").strip(),
                 "doi":       paper_doi,
                 "position":  str(pos).lower(),
                 "is_corresponding": bool(isinstance(oa, dict) and oa.get("is_corresponding")),
@@ -642,6 +655,7 @@ def list_authors():
             "h_index":            a["h_index"],
             "papers_count_ss":    a["papers_count_ss"],
             "citation_count_ss":  a["citation_count_ss"],
+            "added_at":           latest_added(p.get("added_at") for p in a["papers"]),
         })
     rows.sort(key=lambda r: (str(r["family"]).lower(), str(r["given"]).lower()))
     return jsonify(rows)

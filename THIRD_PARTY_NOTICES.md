@@ -17,6 +17,9 @@ is why Corpus itself is AGPL and its source is public.
 |---|---|---|
 | PyMuPDF | 1.28.2 | AGPL-3.0 (or Artifex commercial) |
 | PDF.js (Mozilla; `src/vendor/pdfjs/`, licence in `src/vendor/pdfjs/LICENSE`) | 4.4.168 | Apache-2.0 |
+| citeproc-js (Frank Bennett; `src/vendor/citeproc/citeproc.js`, licence in its header; last line changed so it loads as a browser script) | 2.4.63 | AGPL-3.0-or-later (or CPAL-1.0) |
+| CSL styles: APA 7th, MLA 9th, Chicago author-date, Cite Them Right (Harvard), NLM/Vancouver, IEEE (Citation Style Language project; `src/vendor/citeproc/styles/`, authors in each file) | as of 2026-10-29 | CC BY-SA 3.0 |
+| CSL locales en-US, en-GB (Citation Style Language project; `src/vendor/citeproc/locales/`) | as of 2026-10-29 | CC BY-SA 3.0 |
 | Python (the interpreter, bundled by PyInstaller) | 3.14 | PSF-2.0 |
 | Flask | 3.1.3 | BSD-3-Clause |
 | Werkzeug | 3.1.8 | BSD-3-Clause |

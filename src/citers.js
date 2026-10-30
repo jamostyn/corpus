@@ -108,7 +108,7 @@ window.Citers = (function () {
 
   function _paint(hasDoi) {
     const h = _host();
-    if (h) h.innerHTML = render(_data, { hasDoi, busy: _busy });
+    if (h) { h.innerHTML = render(_data, { hasDoi, busy: _busy }); Collapsible.apply(h); }
   }
 
   async function load(slug, hasDoi, host) {

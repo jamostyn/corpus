@@ -15,6 +15,8 @@ def test_server_imports():
 # excluded: it is framework-provided, not ours.
 SHIPPED_ROUTES = {
     "/",
+    "/api/paper/<slug>/csl",
+    "/api/project/<pid>/csl",
     "/api/config",
     "/api/version",
     "/api/pick-corpus",

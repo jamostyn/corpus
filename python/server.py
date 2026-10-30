@@ -43,6 +43,7 @@ import bridges_api  # noqa: E402
 import citers_api  # noqa: E402
 import documents_api  # noqa: E402
 import projects_api  # noqa: E402
+import cite_api      # noqa: E402
 import progress      # noqa: E402
 
 logger = logging.getLogger("corpus.server")
@@ -154,6 +155,7 @@ app.register_blueprint(entities_api.entities_bp)
 app.register_blueprint(notes_api.notes_bp)
 app.register_blueprint(extract_api.extract_bp)
 app.register_blueprint(projects_api.projects_bp)
+app.register_blueprint(cite_api.cite_bp)
 app.register_blueprint(bridges_api.bridges_bp)
 app.register_blueprint(citers_api.citers_bp)
 app.register_blueprint(documents_api.documents_bp)
@@ -191,6 +193,11 @@ if IS_DEV:
     except Exception:
         pass
     try:
+        from dev_only import exploration as _dev_exploration  # noqa: E402
+        _dev_exploration.register(app)
+    except Exception:
+        pass
+    try:
         from dev_only import client_errors as _dev_client_errors  # noqa: E402
         _dev_client_errors.register(app)
     except Exception:
@@ -214,6 +221,7 @@ def index():
 # app. Real state lives in config_api._bridge; this is a thin alias
 # so launcher.py doesn't need updating.
 set_bridge = config_api.set_bridge
+set_window_error = config_api.set_window_error
 
 
 # ---------- Boot ----------

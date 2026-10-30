@@ -454,6 +454,9 @@ def _clean_candidate(s: str) -> str:
     # Strip "Running head: XXX" prefix — APA-style running head that
     # appears above the title in preprint drafts.
     s = re.sub(r"^Running\s+head:\s*[^.]{0,80}?\s+", "", s, flags=re.IGNORECASE).strip()
+    # A manuscript's labelled title page ("Title: Modelling continual
+    # learning …", flesch-2023): the label is not part of the title.
+    s = re.sub(r"^(?:full\s+)?title\s*:\s*", "", s, flags=re.IGNORECASE).strip()
     return s
 
 
@@ -475,8 +478,12 @@ def _line_scan_candidates(pdf: Path, max_candidates: int = 3) -> list[str]:
     except Exception:
         return []
     out: list[str] = []
-    for raw in text.splitlines():
+    raw_lines = text.splitlines()
+    for i, raw in enumerate(raw_lines):
         line = _clean_candidate(raw)
+        # A title wrapped onto the next line (it ends on "and", "of", …).
+        if line.split() and line.split()[-1].lower().strip(",:;") in _DANGLING_END and i + 1 < len(raw_lines):
+            line = _clean_candidate(line + " " + raw_lines[i + 1])
         if len(line) < 20 or len(line) > 250:
             continue
         low = line.lower()
@@ -522,6 +529,32 @@ def _join_spans(spans: list[dict], size: float) -> str:
         out += t
         prev_x1 = float(x1)
     return out
+
+
+# Words a title never ends on. A candidate ending on one has lost its
+# next line to a different size tier — flesch-2023's "… with Hebbian
+# context gating and" (2026-10-29), whose last line is set a size smaller.
+_DANGLING_END = frozenset("a an and as at by for from in into of on or the to via with without".split())
+# How far below a title's last line its continuation may start, in that
+# line's own font sizes (top to top). A fixed 30pt missed an 18pt title's
+# next line, whose top sat 31pt lower.
+TITLE_NEXT_LINE_SIZES = 2.0
+
+
+def _complete_dangling_title(tier: list, lines: list) -> list:
+    """`tier` [(y, x, text)] plus the line printed right below it, when the
+    tier's text ends on a word no title ends on. `lines` is every page-1
+    line as (size, y, x, text)."""
+    if not tier:
+        return tier
+    last_y, _x, last_text = max(tier)
+    words = last_text.strip().split()
+    if not words or words[-1].lower().strip(",:;") not in _DANGLING_END:
+        return tier
+    size = max((sz for sz, y, x, t in lines if (y, x, t) == (last_y, _x, last_text)), default=0.0)
+    below = sorted((y, x, t) for _size, y, x, t in lines
+                   if last_y < y <= last_y + TITLE_NEXT_LINE_SIZES * size and (y, x, t) not in tier)
+    return tier + below[:1]
 
 
 def _title_candidates_from_pdf_text(pdf: Path, max_candidates: int = 3) -> list[str]:
@@ -585,6 +618,7 @@ def _title_candidates_from_pdf_text(pdf: Path, max_candidates: int = 3) -> list[
 
     out: list[str] = []
     for tier in tiers:
+        tier = _complete_dangling_title(tier, lines)
         candidate = _clean_candidate(" ".join(t for _, _, t in sorted(tier)))
         if len(candidate) < 15 or len(candidate) > 250:
             continue
@@ -853,7 +887,40 @@ def _merge_api_meta(crossref: dict, openalex: dict, ss: dict) -> dict:
     return api_meta
 
 
-def _resolve_by_title(title: str) -> tuple[dict, dict, dict]:
+def _fold(s: str) -> str:
+    """Lower case without accents, for comparing names across sources."""
+    import unicodedata
+    s = unicodedata.normalize("NFKD", str(s or ""))
+    # Soft hyphens and zero-width marks are invisible in the PDF but split
+    # the name in its text: "Holt-\u00adLunstad" must still read "holt-lunstad".
+    s = re.sub("[\u00ad\u200b-\u200d\u2060\ufeff]", "", s)
+    s = re.sub("[\u2010-\u2013]", "-", s)   # typographic hyphens
+    return "".join(c for c in s if not unicodedata.combining(c)).lower()
+
+
+def authors_on_page(records: tuple, page_text: str) -> bool | None:
+    """Do the found record's first authors appear on the PDF's own pages?
+
+    True when any of the first three surnames (from whichever of the
+    Crossref / OpenAlex / S2 records has authors) is printed on the
+    given pages; False when none is; None when no record names anyone
+    (nothing to check). Measured 2026-10-29: a title search for "Large
+    Language Models Pass the Turing Test" (Jones & Bergen) returned a
+    published REVIEW of that paper by Carlson — same title words,
+    different authors."""
+    for rec in records:
+        det = (rec or {}).get("authors_detailed") or []
+        names = [_fold(a.get("family")) for a in det[:3] if isinstance(a, dict) and a.get("family")]
+        names = [n for n in names if len(n) >= 2 and n != "unknown"]
+        if names:
+            page = _fold(page_text)
+            # Letters on either side end a name, digits and marks do not:
+            # "Flesch1," and "Palmerib,*" carry affiliation markers.
+            return any(re.search(rf"(?<![a-z]){re.escape(n)}(?![a-z])", page) for n in names)
+    return None
+
+
+def _resolve_by_title(title: str, page_text: str = "") -> tuple[dict, dict, dict]:
     """(crossref, openalex, semanticscholar) dicts for the paper `title`
     names, or three empties.
 
@@ -882,7 +949,11 @@ def _resolve_by_title(title: str) -> tuple[dict, dict, dict]:
         if not (cr or oa or ss):
             return False
         found_title = cr.get("title") or oa.get("title") or ss.get("title") or ""
-        return not _is_front_matter(str(found_title))
+        if _is_front_matter(str(found_title)):
+            return False
+        # The authors of what was found must be printed on the PDF's
+        # first pages (see authors_on_page); unknown authors pass.
+        return not page_text or authors_on_page((cr, oa, ss), page_text) is not False
 
     found = crossref_search_by_title(title, "", None)
     if found:
@@ -909,6 +980,62 @@ def _resolve_by_title(title: str) -> tuple[dict, dict, dict]:
                if (ss_hit or {}).get("paper_id") and not ss_hit.get("doi") else None)
     ss = _from_semanticscholar(ss_work) if ss_work else {}
     return ({}, oa, ss) if usable({}, oa, ss) else ({}, {}, {})
+
+
+def _is_registered_paper(doi: str) -> bool:
+    """Crossref knows this DOI and it is a paper, not a figure, dataset
+    or journal front matter.
+
+    GATE on Crossref: it is the authoritative DOI registry and returns a
+    strict 404 for unregistered DOIs, where OpenAlex matches LAXLY (a
+    truncated `10.1371/journal` gets some random PLoS paper). Rejects
+    non-paper resources (PLoS figure `.g001`, NIMH dataset, grant) and
+    journal front matter, which carries its own DOI and is typed like an
+    article: snow-1996 took "Psychology, Public Policy, and Law: Editors."
+    (10.1037//1076-8971.8.4.c2) on 2026-09-24 and was renamed
+    noauthorshipindicated-2002."""
+    validate = crossref_lookup(doi)
+    if not validate:
+        return False
+    if str(validate.get("type") or "").lower() in _NON_PAPER_TYPES:
+        return False
+    return not _is_front_matter((validate.get("title") or [""])[0])
+
+
+# Elsevier's bracketed PII, e.g. S0010-0285(02)00505-4 (ISSN, year, item,
+# check digit). Only this form maps to a DOI by prefixing "10.1016/"; the
+# newer 17-character compact PII does not (those DOIs are journal-coded).
+_PII_RE = re.compile(r"\b(S\d{4}-\d{3}[\dX]\(\d{2}\)\d{5}-[\dX])", re.I)
+
+
+def dois_from_pii_text(text: str) -> list[str]:
+    """Candidate DOIs from every bracketed PII in `text`, first seen first."""
+    out = []
+    for pii in _PII_RE.findall(text or ""):
+        d = "10.1016/" + pii.upper()
+        if d not in out:
+            out.append(d)
+    return out
+
+
+_ARXIV_RE = re.compile(r"\barXiv:\s?(\d{4}\.\d{4,5})(?:v\d+)?", re.I)
+
+
+def dois_from_arxiv_text(text: str) -> list[str]:
+    """arXiv DOIs for every new-style arXiv id printed in `text`."""
+    out = []
+    for aid in _ARXIV_RE.findall(text or ""):
+        d = f"10.48550/arxiv.{aid}"
+        if d not in out:
+            out.append(d)
+    return out
+
+
+def _dois_from_pii(pdf: Path) -> list[str]:
+    import fitz
+    with fitz.open(str(pdf)) as d:
+        info = " ".join(str(v) for v in (d.metadata or {}).values() if v)
+    return dois_from_pii_text(info + " " + extract_pdf_text(pdf, max_pages=1))
 
 
 def extract_metadata(pdf: Path) -> dict:
@@ -988,20 +1115,7 @@ def extract_metadata(pdf: Path) -> dict:
                 # `10.1371/journal` gets you some random PLoS paper).
                 # Only pass the DOI to _collect_api_metadata (which
                 # queries all three sources) after Crossref validates it.
-                validate = crossref_lookup(text_doi)
-                if not validate:
-                    continue
-                # Type-check on the validated record: reject non-paper
-                # resources (PLoS figure `.g001`, NIMH dataset, grant).
-                cr_type = str(validate.get("type") or "").lower()
-                if cr_type in _NON_PAPER_TYPES:
-                    continue
-                # Journal front matter carries its own DOI and is typed
-                # like an article. Bundled into a PDF, it outranks the
-                # paper: snow-1996 took "Psychology, Public Policy, and
-                # Law: Editors." (10.1037//1076-8971.8.4.c2) on 2026-09-24
-                # and was renamed noauthorshipindicated-2002.
-                if _is_front_matter((validate.get("title") or [""])[0]):
+                if not _is_registered_paper(text_doi):
                     continue
                 # Passed both gates — do the full 3-source lookup.
                 cr, oa, ss = _collect_api_metadata(text_doi)
@@ -1010,6 +1124,41 @@ def extract_metadata(pdf: Path) -> dict:
                     break
         except Exception:
             pass  # PDF unreadable / no text layer — fall through to title search
+
+    # Elsevier PII fallback (2026-10-29). Older Elsevier PDFs print no DOI
+    # but carry their PII — in /Info's title ("PII: S0010-0285(02)00505-4")
+    # or on page 1 — and for the bracketed PII form the DOI is "10.1016/"
+    # + the PII. johansen-2002 (Cognitive Psychology) imported with no
+    # metadata at all because of this. The DOI still has to pass the same
+    # registry and paper-type gates as any other.
+    if not api_hit:
+        try:
+            for pii_doi in _dois_from_pii(pdf):
+                if _is_registered_paper(pii_doi):
+                    cr, oa, ss = _collect_api_metadata(pii_doi)
+                    if cr or oa or ss:
+                        api_hit = True
+                        break
+        except Exception:
+            pass
+
+    # arXiv stamp fallback (2026-10-29). An arXiv PDF prints its id down
+    # the margin ("arXiv:2503.23674v1 [cs.CL] 31 Mar 2025") and no DOI;
+    # page-1 title guessing then took the stamp itself as the title.
+    # arXiv DOIs (10.48550/arXiv.<id>) are DataCite's, so Crossref does
+    # not know them — OpenAlex and Semantic Scholar do. The found record
+    # must still name an author printed on the page.
+    if not api_hit:
+        try:
+            text = extract_pdf_text(pdf, max_pages=2)
+            for ax_doi in dois_from_arxiv_text(text):
+                cr, oa, ss = _collect_api_metadata(ax_doi)
+                if (oa or ss) and authors_on_page((cr, oa, ss), text) is not False:
+                    api_hit = True
+                    break
+                cr = oa = ss = {}
+        except Exception:
+            cr = oa = ss = {}
 
     # Title-search fallback: still no DOI. Seed with /Info's title; when
     # that is empty (common on older / preprint / repository-copy PDFs),
@@ -1030,8 +1179,12 @@ def extract_metadata(pdf: Path) -> dict:
             seed_titles += [t for t in _title_candidates_from_pdf_text(pdf) if t not in seed_titles]
         except Exception:
             pass
+        try:
+            page_text = extract_pdf_text(pdf, max_pages=2)
+        except Exception:
+            page_text = ""
         for seed_title in seed_titles:
-            cr, oa, ss = _resolve_by_title(seed_title)
+            cr, oa, ss = _resolve_by_title(seed_title, page_text)
             if cr or oa or ss:
                 api_hit = True
                 break

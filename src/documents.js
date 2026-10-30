@@ -82,7 +82,7 @@ function renderDocumentDetail(opts) {
       </div>
       <div class="pd-head-actions">
         <button class="btn" data-doc-rename>Rename</button>
-        ${inOwnWindow ? "" : `<button class="btn" data-doc-popout>Pop out ⧉</button>`}
+        ${inOwnWindow ? "" : `<button class="btn" data-doc-popout>${NEW_WINDOW_LABEL} ⧉</button>`}
         ${inOwnWindow ? "" : `<button class="btn" data-doc-project>Add to project</button>`}
       </div>
     </div>

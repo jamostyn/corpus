@@ -109,7 +109,6 @@ function renderPaperInto(host, d, opts = {}) {
     "Indexed (Crossref)": "meta.indexed",
     "OA record created": "meta.oa_created",
     "OA record updated": "meta.oa_updated",
-    "Schema": "meta.schema",
   };
   // citation_count in the MD is `citation_count: 7` — _fm.py returns
   // all scalars as strings, so accept both "7" and 7 as valid ints.
@@ -235,7 +234,6 @@ function renderPaperInto(host, d, opts = {}) {
     ...showIf(fm.indexed_at,   () => ["Indexed (Crossref)",   tsSpan(fm.indexed_at)   + provBadge("indexed_at")]),
     ...showIf(fm.oa_created_date, () => ["OA record created", tsSpan(fm.oa_created_date) + provBadge("oa_created_date")]),
     ...showIf(fm.oa_updated_date, () => ["OA record updated", tsSpan(fm.oa_updated_date) + provBadge("oa_updated_date")]),
-    ["Schema",     fm.schema_version || "—"],
   ];
 
   // When OA provided per-author structured data, use it — it has
@@ -849,6 +847,7 @@ function renderPaperInto(host, d, opts = {}) {
       <dl class="pd-meta">
         ${metaRows.map(([k, v]) => `<dt title="${escAttr(tt(META_TT_KEYS[k] || ""))}">${escHtml(k)}</dt><dd>${v}</dd>`).join("")}
       </dl>
+      ${CiteUI.sectionHtml()}
       ${corpusLinksBlock}
       ${subjectsBlock}
       ${fosBlock}
@@ -879,7 +878,7 @@ function renderPaperInto(host, d, opts = {}) {
       </div>
       <div class="pd-head-actions">
         ${panel ? "" : pdfLink}
-        ${hasPdf ? `<button class="btn" id="btn-pop-out" data-slug="${escAttr(d.slug)}" title="Open PDF in a separate window. Highlights and notes still save.">Pop out ⧉</button>` : ""}
+        ${hasPdf ? `<button class="btn" id="btn-pop-out" data-slug="${escAttr(d.slug)}">${NEW_WINDOW_LABEL} ⧉</button>` : ""}
         ${oaLink}
         ${bibtexBtn}
         ${panel ? "" : `<button class="btn" id="btn-add-to-project" data-slug="${escAttr(d.slug)}">Add to project</button>
@@ -917,6 +916,8 @@ function renderPaperInto(host, d, opts = {}) {
   if (popOut) popOut.addEventListener("click", () => openDetached("paper", popOut.dataset.slug));
   // Citers load separately from /api/paper/<slug>: the store can be
   // megabytes for a famous paper, and this pane renders on every click.
+  // The Cite section fills itself (its data is a separate request).
+  CiteUI.mountPaper(q("#pd-cite"), d.slug);
   const citersHost = q("#pd-citers-host");
   if (citersHost) Citers.load(d.slug, !isUnk(fm.doi), citersHost);
   // Project membership belongs to projects.js — this pane only opens it.
@@ -941,7 +942,9 @@ function renderPaperInto(host, d, opts = {}) {
       if (pdfPane)  pdfPane.hidden  = (target !== "pdf");
     });
   });
-
+  // Sections start collapsed (collapsible.js); the info pane only, so
+  // the PDF pane's controls are untouched.
+  Collapsible.apply(host.querySelector(".pd-subpane-info") || host);
 }
 
 async function copyBibtex(text) {

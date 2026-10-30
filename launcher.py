@@ -9,6 +9,7 @@ Run:
 from __future__ import annotations
 
 import json
+import logging
 import socket
 import sys
 import threading
@@ -149,6 +150,30 @@ class _Bridge:
             pass
         return None
 
+    def save_text_file(self, filename: str, content: str) -> str:
+        """Ask where to save `content` (a project's exported references),
+        then write it. Returns "saved", "cancelled" or "failed".
+
+        The window's webview cannot download a file itself, so the save
+        dialog and the write happen here, in the one process that may
+        touch the user's disk outside the corpus."""
+        try:
+            import webview
+            wins = webview.windows
+            if not wins:
+                return "failed"
+            kind = getattr(getattr(webview, "FileDialog", None), "SAVE",
+                           getattr(webview, "SAVE_DIALOG", 30))
+            name = Path(str(filename or "references.txt")).name or "references.txt"
+            result = wins[0].create_file_dialog(kind, save_filename=name)
+            if not result:
+                return "cancelled"
+            target = result if isinstance(result, str) else result[0]
+            Path(target).write_text(str(content), encoding="utf-8")
+            return "saved"
+        except Exception:
+            return "failed"
+
     # ---- Pop-out: multi-window management -----------------------------
 
     def open_detached(self, slug: str, url: str, title: str) -> str:
@@ -229,6 +254,25 @@ class _Bridge:
             return False
 
 
+def _disable_window_tabbing() -> bool:
+    """macOS only: keep every Corpus window a window, never a tab.
+
+    With automatic tabbing on (the default in full screen, or with
+    "Prefer tabs when opening documents" set), macOS merged a popped-out
+    note or paper into the main window as a tab, under a tab bar Corpus
+    cannot style. A pop-out exists to sit beside the main window, so
+    tabbing is switched off for the whole app before any window opens.
+    Returns whether it was switched off."""
+    if sys.platform != "darwin":
+        return False
+    try:
+        import AppKit
+        AppKit.NSWindow.setAllowsAutomaticWindowTabbing_(False)
+        return True
+    except Exception:
+        return False
+
+
 def _run_server(port: int, ws) -> None:
     """Serve Flask in a daemon thread."""
     ws.serve_forever()
@@ -257,8 +301,13 @@ def main() -> int:
 
     # Try pywebview first (native shell). If it's not installed / fails,
     # fall back to opening the URL in the user's default browser.
+    if sys.platform == "win32" and getattr(sys, "frozen", False):
+        # Must run before pywebview loads its .NET bridge (window_fallback.py).
+        from window_fallback import unblock_downloaded_files
+        unblock_downloaded_files(Path(sys.executable).parent)
     try:
         import webview
+        _disable_window_tabbing()
         bridge = _Bridge()
         srv.set_bridge(bridge)
         main_win = webview.create_window(
@@ -289,6 +338,11 @@ def main() -> int:
     except Exception as e:
         # Browser fallback path.
         print(f"[launcher] pywebview unavailable ({type(e).__name__}: {e})", file=sys.stderr)
+        # Before the browser opens, so its first config read can say why.
+        from window_fallback import window_error_notice
+        notice = window_error_notice(e)
+        srv.set_window_error(notice)
+        logging.getLogger("corpus.launcher").info("window_fallback reason=%s", notice["reason"])
         print(f"[launcher] opening in default browser: {url}", file=sys.stderr)
         # Small delay so Flask is definitely serving before the browser hits it.
         time.sleep(0.3)

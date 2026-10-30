@@ -9,4 +9,4 @@ Bumped by hand per release. Read by:
 Keep this file trivially parseable (one assignment, no imports) so
 the build script can `grep` it without importing the whole app.
 """
-__version__ = "0.4.3"
+__version__ = "0.4.4"

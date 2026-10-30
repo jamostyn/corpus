@@ -193,7 +193,7 @@ function renderNoteDetail(host) {
         <span class="note-status" id="note-save-status"></span>
         ${detachedNote
           ? `<button class="btn" id="btn-note-pick-hl">Link highlight</button>`
-          : `<button class="btn" id="btn-note-popout" data-note-id="${escAttr(n.id)}">Pop out</button>`}
+          : `<button class="btn" id="btn-note-popout" data-note-id="${escAttr(n.id)}">${NEW_WINDOW_LABEL} ⧉</button>`}
         <div class="note-settings">
           <button type="button" class="btn" id="btn-note-settings"
                   aria-haspopup="menu" aria-expanded="false">Settings</button>
@@ -1054,9 +1054,11 @@ function _applyNoteFontSizePx(root, px) {
 //
 // Interactions (Excel-style, no visible handles — cursor tells the
 // user what will happen):
-//   * cursor near the table's RIGHT edge → col-resize whole table
+//   * cursor near the table's RIGHT edge → resize the LAST column only
+//     (2026-10-29: stretching every column made the right edge behave
+//     unlike every other column border)
 //   * cursor near the BOTTOM edge → row-resize whole table
-//   * near the bottom-right CORNER → proportional both
+//   * near the bottom-right CORNER → last column + proportional height
 //   * in the TOP ROW, near a cell's right border → resize that column
 //   * in the LEFT COLUMN, near a cell's bottom border → resize that row
 //
@@ -1139,7 +1141,8 @@ function _insertNoteTable(body, rows, cols) {
 
 // Detect which resize zone (if any) the cursor is over, given a mouse
 // event and the table element. Returns null (no zone) or an object
-// { mode: "table-h"|"table-v"|"table-corner"|"col"|"row", idx?, ... }.
+// { mode: "table-v"|"table-corner"|"col"|"row", idx? }. The right edge
+// is "col" on the last column.
 function _noteTableHitTest(e, table) {
   const r = table.getBoundingClientRect();
   const x = e.clientX, y = e.clientY;
@@ -1151,7 +1154,8 @@ function _noteTableHitTest(e, table) {
     return { mode: "table-corner" };
   }
   if (Math.abs(x - r.right) <= E && y >= r.top && y <= r.bottom) {
-    return { mode: "table-h" };
+    const last = (table.querySelector("tr")?.children.length || 1) - 1;
+    return { mode: "col", idx: last };
   }
   if (Math.abs(y - r.bottom) <= E && x >= r.left && x <= r.right) {
     return { mode: "table-v" };
@@ -1187,7 +1191,6 @@ function _noteTableHitTest(e, table) {
 function _cursorForMode(mode) {
   switch (mode) {
     case "table-corner": return "nwse-resize";
-    case "table-h":
     case "col":          return "col-resize";
     case "table-v":
     case "row":          return "row-resize";
@@ -1237,12 +1240,13 @@ function _startNoteTableResize(e, table, hit, onChanged) {
   const doMove = (ev) => {
     const dx = ev.clientX - startX;
     const dy = ev.clientY - startY;
-    if (hit.mode === "table-h" || hit.mode === "table-corner") {
-      const newW = Math.max(cols.length * _NOTE_TABLE_MIN_CELL,
-                     Math.min(_NOTE_TABLE_MAX_TOTAL, origTotalW + dx));
-      const scale = newW / origTotalW;
-      cols.forEach((c, i) => { c.style.width = `${Math.max(_NOTE_TABLE_MIN_CELL, origColW[i] * scale)}px`; });
-      table.style.width = `${newW}px`;
+    if (hit.mode === "table-corner") {
+      // Width from the corner moves the last column only, like the edge.
+      const last = cols.length - 1;
+      const room = _NOTE_TABLE_MAX_TOTAL - (origTotalW - origColW[last]);
+      const newColW = Math.max(_NOTE_TABLE_MIN_CELL, Math.min(room, origColW[last] + dx));
+      cols[last].style.width = `${newColW}px`;
+      table.style.width = `${origTotalW - origColW[last] + newColW}px`;
     }
     if (hit.mode === "table-v" || hit.mode === "table-corner") {
       const newH = Math.max(rows.length * _NOTE_TABLE_MIN_CELL,
@@ -1252,7 +1256,8 @@ function _startNoteTableResize(e, table, hit, onChanged) {
     }
     if (hit.mode === "col") {
       // Only the dragged column changes; total width shifts by dx.
-      const newColW = Math.max(_NOTE_TABLE_MIN_CELL, origColW[hit.idx] + dx);
+      const room = _NOTE_TABLE_MAX_TOTAL - (origTotalW - origColW[hit.idx]);
+      const newColW = Math.max(_NOTE_TABLE_MIN_CELL, Math.min(room, origColW[hit.idx] + dx));
       cols[hit.idx].style.width = `${newColW}px`;
       table.style.width = `${origTotalW - origColW[hit.idx] + newColW}px`;
     }
@@ -1533,8 +1538,7 @@ function _openEntityLinkPicker(savedRange, body, onInserted) {
   const sortFor = (m) => {
     const saved = prefs[m.id];
     if (saved && Sorting.spec(m.sorts, saved.key)) return saved;
-    const key = ((m.sorts || [])[0] || {}).key;
-    return { key, dir: Sorting.defaultDir(m.sorts, key) };
+    return defaultSort(m);
   };
   const showSort = () => {
     const cur = sortFor(active);

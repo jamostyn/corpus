@@ -166,6 +166,7 @@ def surname_initial(family: str, given: str) -> str:
 
 _INITIAL_TOKEN = re.compile(r"[A-Z]\.?")
 _INITIAL_RUN   = re.compile(r"[A-Z]\.?(?:[A-Z]\.?)*")
+_NAME_SUFFIX   = re.compile(r"(?:Jr|Sr|II|III|IV)\.?", re.I)
 
 
 def split_display_name(name: str) -> tuple[str, str]:
@@ -186,6 +187,14 @@ def split_display_name(name: str) -> tuple[str, str]:
     """
     if not name:
         return ("", "")
+    # "Wei, Jason" / "Chi, Ed H." — inverted order, as OpenAlex returns some
+    # arXiv authors. Read token by token these became family "Jason", given
+    # "Wei," (measured 2026-10-29, Wei et al. 2022 imported as jason-2022).
+    # A comma before a suffix ("John Smith, Jr.") is not an inversion.
+    family, comma, given = name.partition(",")
+    if comma and family.strip() and given.strip() and not _NAME_SUFFIX.fullmatch(given.strip()):
+        return (family.strip(), " ".join(given.split()))
+    name = family if comma and not given.strip() else re.sub(r",\s*" + _NAME_SUFFIX.pattern + r"$", "", name)
     tokens = name.split()
     if not tokens:
         return ("", "")
@@ -316,5 +325,18 @@ TITLE_MATCH_FLOOR = 0.90
 MIN_TITLE_WORDS = 3
 
 
+# A seed made only of section words is a page layout, not a title. On
+# 2026-10-29 "ABSTRACT 1 Introduction" (an Annual Review's first page)
+# matched a Crossref record titled "Abstract introduction", and
+# fleming-2024 imported as stelzner-2006.
+SECTION_WORDS = frozenset(
+    "abstract introduction keywords key words contents background method methods "
+    "results discussion references summary highlights article info information "
+    "research original review report paper".split())
+
+
 def title_worth_searching(title: str) -> bool:
-    return len(norm_title(title).split()) >= MIN_TITLE_WORDS
+    words = norm_title(title).split()
+    if len(words) < MIN_TITLE_WORDS:
+        return False
+    return not all(w in SECTION_WORDS or w.isdigit() for w in words)

@@ -140,6 +140,38 @@
 // Server sanitizes on POST — drops empty-rect entries, coerces types.
 // ============================================================================
 
+// ---- Appearance: follow Corpus's theme setting ----------------------------
+// The Corpus window marks a pinned theme with `data-theme` on its <html>
+// (app.js::applyTheme); none means "follow the system", which pdf.js's
+// viewer.css already does. pdf.js pins its own theme with `is-dark` /
+// `is-light` on <html>. The viewer is a same-origin iframe, so it reads
+// the parent's attribute directly and watches it for changes. Runs for
+// every viewer, whether or not it has highlights.
+(function () {
+  "use strict";
+  function viewerThemeClass(parentTheme) {
+    return parentTheme === "dark" ? "is-dark"
+         : parentTheme === "light" ? "is-light" : null;
+  }
+  function sync(parentRoot) {
+    const cls = viewerThemeClass(parentRoot.dataset.theme);
+    const root = document.documentElement;
+    root.classList.remove("is-dark", "is-light");
+    if (cls) root.classList.add(cls);
+  }
+  let parentRoot = null;
+  try {
+    if (window.parent !== window) parentRoot = window.parent.document.documentElement;
+  } catch (_) { /* not same-origin: leave pdf.js on the system setting */ }
+  if (parentRoot) {
+    sync(parentRoot);
+    new MutationObserver(() => sync(parentRoot))
+      .observe(parentRoot, { attributes: true, attributeFilter: ["data-theme"] });
+  }
+  window.corpusViewerThemeClass = viewerThemeClass;
+  // ---- end appearance
+})();
+
 (function () {
   "use strict";
 

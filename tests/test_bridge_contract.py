@@ -37,6 +37,8 @@ EXPECTED_BRIDGE_METHODS = {
     # 2026-09-21: a note window's PDF panel claims/releases the paper it
     # shows, so the same paper cannot be edited in two windows.
     "set_panel_paper",
+    # 2026-10-29: a project's references exported to a file the user picks.
+    "save_text_file",
 }
 
 # The single method app.js probes to decide pywebview-vs-browser mode.
@@ -136,3 +138,22 @@ def test_fresh_bridge_tracks_no_windows(bridge_cls):
     a, b = bridge_cls(), bridge_cls()
     a._detached["x"] = object()
     assert b._detached == {}
+
+
+
+def test_save_text_file_writes_where_the_user_chose(bridge_cls, tmp_path, monkeypatch):
+    """Catches the export reporting "saved" without writing, writing to a
+    path the user did not pick, or crashing on a cancelled dialog."""
+    import sys, types
+    target = tmp_path / "out.txt"
+    calls = []
+    win = types.SimpleNamespace(create_file_dialog=lambda kind, save_filename=None:
+                                (calls.append(save_filename) or str(target)))
+    fake = types.SimpleNamespace(windows=[win], FileDialog=types.SimpleNamespace(SAVE=30))
+    monkeypatch.setitem(sys.modules, "webview", fake)
+    b = bridge_cls()
+    assert b.save_text_file("../../evil/refs.txt", "A. (2020). Title.") == "saved"
+    assert target.read_text(encoding="utf-8") == "A. (2020). Title."
+    assert calls == ["refs.txt"], "only a bare file name is suggested"
+    win.create_file_dialog = lambda kind, save_filename=None: None
+    assert b.save_text_file("refs.txt", "x") == "cancelled"

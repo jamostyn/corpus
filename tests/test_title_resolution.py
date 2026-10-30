@@ -244,7 +244,7 @@ def test_page_one_is_searched_even_when_info_has_a_title(monkeypatch):
     monkeypatch.setattr(em, "_title_candidates_from_pdf_text",
                         lambda pdf: ["Challenge Point: A Framework for Conceptualizing Practice"])
     seeds = []
-    monkeypatch.setattr(em, "_resolve_by_title", lambda t: seeds.append(t) or ({}, {}, {}))
+    monkeypatch.setattr(em, "_resolve_by_title", lambda t, page_text="": seeds.append(t) or ({}, {}, {}))
     em.extract_metadata(Path("x.pdf"))
     assert seeds == ["Repository Download Copy",
                      "Challenge Point: A Framework for Conceptualizing Practice"]

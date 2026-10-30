@@ -3,6 +3,36 @@
 What changed for users in each release. Downloads are on the
 [Releases page](https://github.com/jamostyn/corpus/releases).
 
+## 0.4.4 — 2026-10-30
+
+Mac only for now; the Windows download stays 0.4.2 until a 0.4.4
+Windows build is made.
+
+- Dark mode: Settings → Appearance (Match system, Light or Dark).
+- Cite: each paper shows its citation in APA 7, MLA 9, Chicago
+  (author-date), Harvard, Vancouver or IEEE, with Copy buttons; a project
+  can export all its references.
+- The top tabs are grouped, and never wrap.
+- Paper info sections start collapsed; the abstract stays open.
+- Lists open sorted by date added, newest first.
+- "Pop out" is now "Open in new window"; on macOS these are always
+  separate windows, never tabs.
+- In a note opened in its own window, drag the divider between the note
+  and the PDF.
+- Note tables: dragging the right edge resizes the last column.
+- Settings explain what each setting does.
+- Windows: if Corpus cannot open its own window and opens in the browser
+  instead, the page says why, with a link to install WebView2 when that
+  is the cause. Corpus also clears Windows' "downloaded from the
+  internet" block on its own files, a common reason the window fails.
+- Title search checks that the paper it finds is by an author printed on
+  the PDF, so it no longer imports a different paper with a similar
+  title.
+- arXiv preprints are found by the arXiv id printed on them.
+- Authors listed as "Surname, Given" keep their surname (one arXiv
+  paper had been filed under its first author's given name).
+- Older Elsevier papers that print only a PII are identified by it.
+
 ## 0.4.3 — 2026-10-28
 
 Mac only for now; the Windows download stays 0.4.2 until a 0.4.3

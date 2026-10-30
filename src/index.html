@@ -7,25 +7,39 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="window-notice" class="window-notice" hidden></div>
   <header class="topbar">
     <div class="brand">Corpus</div>
     <div class="navarrows">
       <button id="btn-back" class="btn navarrow" disabled aria-label="Back">&#8592;</button>
       <button id="btn-fwd"  class="btn navarrow" disabled aria-label="Forward">&#8594;</button>
     </div>
+    <!-- Grouped by what the tabs are for (2026-10-29): your library, where
+         it comes from, your own writing, and experiments. Each group is
+         its own pill (.tab-group). -->
     <nav class="tabs" id="tabs">
-      <button class="tab active" data-tab="papers">Papers</button>
-      <button class="tab"        data-tab="authors">Authors</button>
-      <button class="tab"        data-tab="institutions">Institutions</button>
-      <button class="tab"        data-tab="journals">Journals</button>
-      <button class="tab"        data-tab="notes">Notes</button>
-      <button class="tab"        data-tab="projects">Projects</button>
-      <button class="tab"        data-tab="documents">Documents</button>
+      <div class="tab-group" aria-label="Library">
+        <button class="tab active" data-tab="papers">Papers</button>
+        <button class="tab"        data-tab="documents">Documents</button>
+      </div>
+      <div class="tab-group" aria-label="Sources">
+        <button class="tab"        data-tab="authors">Authors</button>
+        <button class="tab"        data-tab="institutions">Institutions</button>
+        <button class="tab"        data-tab="journals">Journals</button>
+      </div>
+      <div class="tab-group" aria-label="Writing">
+        <button class="tab"        data-tab="notes">Notes</button>
+        <button class="tab"        data-tab="projects">Projects</button>
+      </div>
       <!-- Dev only. Hidden in markup and revealed by _loadDevOnly() only
            when /api/config reports dev_mode, so a shipped build can never
-           show it — its code lives in src/dev_only/, which is stripped. -->
-      <button class="tab"        data-tab="testing" data-dev-only hidden>Testing</button>
-      <button class="tab"        data-tab="graph" data-dev-only hidden>Graph</button>
+           show it — its code lives in src/dev_only/, which is stripped.
+           Each experiment gets its own tab here. -->
+      <div class="tab-group tab-group-experimental" aria-label="Experimental" data-dev-only hidden>
+        <button class="tab"        data-tab="testing" data-dev-only hidden>Text extractor</button>
+        <button class="tab"        data-tab="graph" data-dev-only hidden>Graph</button>
+        <button class="tab"        data-tab="exploration" data-dev-only hidden>Exploration</button>
+      </div>
     </nav>
     <div class="spacer"></div>
     <button id="btn-add"      class="btn primary" disabled>Add PDFs…</button>
@@ -56,6 +70,7 @@
         <input type="search" id="document-filter"     placeholder="Filter documents…"    hidden>
         <input type="search" id="testing-filter"      placeholder="Filter features…"     hidden>
         <input type="search" id="graph-filter"        placeholder="Find a paper…"        hidden>
+        <input type="search" id="exploration-filter"  placeholder="Filter recommendations…" hidden>
       </div>
       <div class="sidebar-sort" id="papers-sort-wrap">
         <label class="sidebar-sort-label" for="papers-sort-field">Sort by</label>
@@ -73,6 +88,7 @@
       <ol class="papers-list documents-list" id="documents-list" hidden></ol>
       <ol class="testing-list"      id="testing-list"      hidden></ol>
       <ol class="graph-list"        id="graph-list"        hidden></ol>
+      <ol class="exploration-list"  id="exploration-list"  hidden></ol>
       <div class="sidebar-footer" id="count-line"></div>
     </aside>
 
@@ -119,6 +135,7 @@
       <div class="paper-detail document-detail" id="document-detail" hidden></div>
       <div class="testing-detail"     id="testing-detail"     hidden></div>
       <div class="graph-detail"       id="graph-detail"       hidden></div>
+      <div class="exploration-detail" id="exploration-detail" hidden></div>
     </section>
   </main>
 
@@ -137,30 +154,37 @@
             <button class="btn" id="cfg-browse">Browse…</button>
             <button class="btn" id="cfg-default">Use default</button>
           </div>
-          <p class="hint">Corpus will read/write <code>papers/</code>, <code>summaries/</code>,
-             and <code>inbox/</code> subdirectories here. Pick anywhere you
-             like — <code>~/Documents/Corpus/</code> is the conventional
-             spot on macOS (visible in Finder, backed up by Time Machine).</p>
+          <p class="hint">Your library: PDFs, one Markdown file per paper, notes,
+             highlights and documents, in subfolders here. Any folder works;
+             <code>Documents/Corpus</code> is a good choice.</p>
+        </div>
+        <div class="field">
+          <label for="cfg-theme">Appearance</label>
+          <select id="cfg-theme">
+            <option value="system">Match system</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
         </div>
         <div class="field">
           <label for="cfg-mailto">Email for API polite pool</label>
           <input type="email" id="cfg-mailto" placeholder="you@example.edu">
-          <p class="hint">Crossref and OpenAlex give politer rate limits to
-             identified clients. Optional but recommended.</p>
+          <p class="hint">Optional. Sent to Crossref and OpenAlex, which answer
+             identified requests faster and limit them less.</p>
         </div>
         <div class="field">
           <label for="cfg-s2-key">Semantic Scholar API key <span class="status" id="s2-status"></span></label>
-          <input type="password" id="cfg-s2-key" placeholder="leave blank to keep existing / send space to clear">
-          <p class="hint"><strong>Stored, not yet used.</strong> Corpus v0.1 is Crossref-only.
-             Semantic Scholar integration comes in a later iteration. When it lands, this
-             key will be forwarded for higher rate limits. Get one at
+          <input type="password" id="cfg-s2-key" placeholder="Blank keeps the saved key; a space removes it">
+          <p class="hint">Optional. Without a key, Semantic Scholar lookups wait a
+             second between requests; with one, they run without the wait.
+             Get one at
              <a href="https://www.semanticscholar.org/product/api" target="_blank">semanticscholar.org/product/api</a>.</p>
         </div>
         <div class="field">
           <label for="cfg-oa-key">OpenAlex API key <span class="status" id="oa-status"></span></label>
-          <input type="password" id="cfg-oa-key" placeholder="leave blank to keep existing / send space to clear">
-          <p class="hint"><strong>Stored, not yet used.</strong> Same story as above —
-             OpenAlex integration is a later feature.</p>
+          <input type="password" id="cfg-oa-key" placeholder="Blank keeps the saved key; a space removes it">
+          <p class="hint">Optional. Sent with every OpenAlex request (paper details,
+             citing papers, citation bridges), which raises OpenAlex's limits.</p>
         </div>
       </div>
       <footer class="modal-footer">
@@ -195,6 +219,11 @@
   <script src="entity-detail.js"></script>
   <script src="corpus-links.js"></script>
   <script src="citers.js"></script>
+  <script src="collapsible.js"></script>
+  <script src="window-notice.js"></script>
+  <script src="vendor/citeproc/citeproc.js"></script>
+  <script src="cite.js"></script>
+  <script src="cite-ui.js"></script>
   <script src="paper-detail.js"></script>
   <script src="author-detail.js"></script>
   <script src="institution-detail.js"></script>

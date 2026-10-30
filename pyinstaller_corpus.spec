@@ -84,7 +84,7 @@ a = Analysis(
         # from dynamically-imported blueprints.
         '_paths', '_fm', '_api_http', '_version',
         'crossref_client', 'openalex_client', 'semanticscholar_client',
-        'oa_enrichment',
+        'oa_enrichment', 'window_fallback',
         'prefill_summary', 'extract_metadata', 'extract_references',
 
         # ----- Blueprint modules -----

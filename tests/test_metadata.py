@@ -175,3 +175,14 @@ def test_crossref_type_to_kind_mapping():
     assert crossref_type_to_kind("dataset")             is None
     assert crossref_type_to_kind("")                    is None
     assert crossref_type_to_kind(None)                  is None
+
+
+def test_an_inverted_name_keeps_its_surname_first():
+    """Catches "Wei, Jason" (OpenAlex's form for some arXiv authors) split
+    token by token into family "Jason", given "Wei," — Wei et al. 2022
+    imported as jason-2022 — or a "Jr." suffix taken for a given name."""
+    from _api_http import split_display_name
+    assert split_display_name("Wei, Jason") == ("Wei", "Jason")
+    assert split_display_name("Chi, Ed  H.") == ("Chi", "Ed H.")
+    assert split_display_name("John Smith, Jr.") == ("Smith", "John")
+    assert split_display_name("Smith,") == ("Smith", "")

@@ -10,7 +10,8 @@ const state = {
   // Sidebar sort — Papers only for now. Default matches the backend's
   // author-asc ordering so first paint stays consistent with what
   // /api/papers already returns; user picks override that.
-  papersSort:  { field: "author", dir: "asc" },
+  // Filled from MODES' DEFAULT_SORT below, once MODES exists.
+  papersSort:  null,
   // PDF Note Mode is a user-preference toggle — global across papers.
   // When on, the PDF subtab lays the iframe against the left with a
   // right-side gutter for anchored notes. Highlight-mode plumbing
@@ -74,6 +75,9 @@ const state = {
   graphNodes: [],           // dev-only Graph tab: papers in the citation graph
   graphFilter: "",
   selectedGraphSlug: null,
+  explorationItems: [],      // dev-only Exploration tab: recommended papers shown
+  explorationFilter: "",
+  selectedExplorationId: null,
   projectDetail: null,       // /api/project/<id> response (carries `resolved`)
 };
 
@@ -188,6 +192,7 @@ const MODES = [
     sorts: [
       { key: "name",   label: "Name",             value: (r) => [r.family, r.given].filter(Boolean).join(", ") },
       { key: "papers", label: "Papers in corpus", value: (r) => r.num_papers, numeric: true, defaultDir: "desc" },
+      { key: "added_at", label: "Date added", value: (r) => r.added_at, defaultDir: "desc" },
     ] },
   { id: "institutions", stateKey: "institutions", filterKey: "institutionFilter", selectedKey: "selectedInstitutionKey",
     listId: "institutions-list", filterId: "institution-filter", detailId: "institution-detail", dataAttr: "data-key",
@@ -203,6 +208,7 @@ const MODES = [
       { key: "name",    label: "Name",             value: (r) => r.name },
       { key: "papers",  label: "Papers in corpus", value: (r) => r.num_papers, numeric: true, defaultDir: "desc" },
       { key: "country", label: "Country",          value: (r) => Countries.name(r.country_code) || r.country_code },
+      { key: "added_at", label: "Date added",       value: (r) => r.added_at, defaultDir: "desc" },
     ] },
   { id: "journals", stateKey: "journals", filterKey: "journalFilter", selectedKey: "selectedJournalKey",
     listId: "journals-list", filterId: "journal-filter", detailId: "journal-detail", dataAttr: "data-key",
@@ -217,6 +223,7 @@ const MODES = [
     sorts: [
       { key: "name",   label: "Name",             value: (r) => r.name },
       { key: "papers", label: "Papers in corpus", value: (r) => r.num_papers, numeric: true, defaultDir: "desc" },
+      { key: "added_at", label: "Date added", value: (r) => r.added_at, defaultDir: "desc" },
     ] },
   { id: "notes", stateKey: "notes", filterKey: "noteFilter", selectedKey: "selectedNoteId",
     listId: "notes-list", filterId: "note-filter", detailId: "note-detail", dataAttr: "data-note-id",
@@ -287,8 +294,32 @@ const MODES = [
     emptyStateHtml: () => "<p>No citations between papers in this corpus yet.</p>",
     searchFields: (r) => [r.title, r.slug],
     searchHint: "title or slug" },
+  // DEV ONLY — recommended papers not yet in the library (2026-10-29).
+  { id: "exploration", stateKey: "explorationItems", filterKey: "explorationFilter",
+    selectedKey: "selectedExplorationId",
+    listId: "exploration-list", filterId: "exploration-filter", detailId: "exploration-detail",
+    dataAttr: "data-exploration-id",
+    load:         () => window.DevExploration && window.DevExploration.load(),
+    render:       () => window.DevExploration && window.DevExploration.render(),
+    select:       (id) => window.DevExploration && window.DevExploration.select(id),
+    renderDetail: () => window.DevExploration && window.DevExploration.renderDetail(),
+    loadPolicy: "always", devOnly: true,
+    emptyStateHtml: () => "<p>No recommended papers waiting.</p>",
+    searchFields: (r) => [r.title, r.authors, r.venue],
+    searchHint: "title, author or journal" },
 ];
 const MODES_BY_ID = Object.fromEntries(MODES.map(m => [m.id, m]));
+
+// Every sortable list opens newest-added first (2026-10-29): the Papers
+// sidebar and the note link picker both start from this. A list with a
+// "Date added" sort uses it; one without falls back to its first sort.
+const DEFAULT_SORT_KEY = "added_at";
+function defaultSort(mode) {
+  const sorts = (mode && mode.sorts) || [];
+  const key = sorts.some(s => s.key === DEFAULT_SORT_KEY) ? DEFAULT_SORT_KEY : (sorts[0] || {}).key;
+  return { key, dir: Sorting.defaultDir(sorts, key) };
+}
+state.papersSort = (({ key, dir }) => ({ field: key, dir }))(defaultSort(MODES_BY_ID.papers));
 
 // ---------- Back / forward ----------
 //
@@ -543,6 +574,8 @@ async function api(path, opts = {}) {
 
 async function loadConfig() {
   state.config = await api("/api/config");
+  applyTheme(state.config.theme);
+  WindowNotice.show(state.config.window_error);
   const path = state.config.corpus_dir || "";
   // Corpus path lives only in Settings now — no topbar readout.
   const hasCorpus = Boolean(path);
@@ -568,10 +601,11 @@ function _loadDevOnly() {
   // Reveal dev-only tabs. They ship hidden in index.html; this is the
   // only place that un-hides them, and it runs only when /api/config
   // reports dev_mode.
-  document.querySelectorAll(".tabs .tab[data-dev-only]").forEach(t => { t.hidden = false; });
+  // The experimental group and its tabs both carry data-dev-only.
+  document.querySelectorAll(".tabs [data-dev-only]").forEach(t => { t.hidden = false; });
 
   ["/dev_only/bug-reporter.css", "/dev_only/tooltip-editor.css", "/dev_only/planning.css",
-   "/dev_only/testing.css", "/dev_only/graph.css"].forEach(href => {
+   "/dev_only/testing.css", "/dev_only/graph.css", "/dev_only/exploration.css"].forEach(href => {
     const css = document.createElement("link");
     css.rel = "stylesheet";
     css.href = href;
@@ -593,7 +627,8 @@ function _loadDevOnly() {
      // Graph tab: three.js, then its orbit controls (which attach to
      // THREE), then the model, then the view that uses all three.
      "/dev_only/vendor/three.min.js", "/dev_only/vendor/OrbitControls.js",
-     "/dev_only/graph-model.js", "/dev_only/graph.js"].forEach(src => {
+     "/dev_only/graph-model.js", "/dev_only/graph.js",
+     "/dev_only/exploration.js"].forEach(src => {
       const s = document.createElement("script");
       s.src = src;
       s.async = false;
@@ -619,6 +654,9 @@ window.state = state;
 // A hash with no colon is read as a paper, so windows popped out by an
 // older build keep working.
 const DETACH_KINDS = ["paper", "note", "document"];
+// The one label for every "open this in its own window" button (paper,
+// note, document). Replaced "Pop out" (2026-10-29).
+const NEW_WINDOW_LABEL = "Open in new window";
 
 function detachKey(kind, id) { return `${kind}:${id}`; }
 
@@ -1336,9 +1374,20 @@ async function rescan() {
 
 // ---------- Settings modal ----------
 
+/** Apply an appearance setting: "light" / "dark" pin the theme with
+ *  `data-theme` on <html>; "system" removes it, so styles.css's
+ *  prefers-color-scheme block follows the OS. The PDF viewer iframes
+ *  read the same attribute (corpus-highlights.js). */
+function applyTheme(theme) {
+  const root = document.documentElement;
+  if (theme === "light" || theme === "dark") root.dataset.theme = theme;
+  else delete root.dataset.theme;
+}
+
 function openSettings() {
   const modal = $("#settings-modal");
   const cfg   = state.config || {};
+  $("#cfg-theme").value = cfg.theme || "system";
   $("#cfg-corpus-dir").value = cfg.corpus_dir || "";
   $("#cfg-mailto").value     = cfg.mailto     || "";
   $("#cfg-s2-key").value = "";
@@ -1351,12 +1400,18 @@ function openSettings() {
   $("#oa-status").className = "status" + (cfg.keys?.openalex_key ? " set" : "");
   modal.hidden = false;
 }
-function closeSettings() { $("#settings-modal").hidden = true; }
+// Closing without saving puts back the saved theme (the picker previews
+// its choice live).
+function closeSettings() {
+  $("#settings-modal").hidden = true;
+  applyTheme((state.config || {}).theme);
+}
 
 async function saveSettings() {
   const payload = {
     corpus_dir: $("#cfg-corpus-dir").value.trim(),
     mailto:     $("#cfg-mailto").value.trim(),
+    theme:      $("#cfg-theme").value,
     keys: {},
   };
   // Only send key fields the user actually typed into.
@@ -1416,6 +1471,7 @@ $("#pdf-picker").addEventListener("change", (e) => {
 $("#btn-scan").addEventListener("click", rescan);
 
 $("#btn-settings").addEventListener("click", openSettings);
+$("#cfg-theme").addEventListener("change", (e) => applyTheme(e.target.value));
 $("#settings-close").addEventListener("click", closeSettings);
 $("#settings-cancel").addEventListener("click", closeSettings);
 $("#settings-save").addEventListener("click", saveSettings);

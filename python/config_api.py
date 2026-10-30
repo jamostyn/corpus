@@ -47,6 +47,11 @@ CONFIG_DIR  = CONFIG_PATH.parent
 TOOLTIPS_PATH = CONFIG_DIR / "tooltips.json"
 KEYRING_SERVICE = "corpus"
 SECRET_KEYS = ("semantic_scholar_key", "openalex_key")  # kept in Keychain
+# Appearance. "system" follows the OS light/dark setting (pure CSS, no
+# script); "light" / "dark" pin it. The Settings <select> lists exactly
+# these (tests/test_theme.py).
+THEMES = ("system", "light", "dark")
+DEFAULT_THEME = "system"
 
 
 def _load_json_config() -> dict:
@@ -145,6 +150,7 @@ def get_config():
     return jsonify({
         "corpus_dir": cfg.get("corpus_dir") or "",
         "mailto":     cfg.get("mailto") or "",
+        "theme":      cfg.get("theme") if cfg.get("theme") in THEMES else DEFAULT_THEME,
         "keys": {
             k: bool(_get_secret(k))
             for k in SECRET_KEYS
@@ -154,6 +160,9 @@ def get_config():
         # frontend skips loading the dev-only bundle. server.py sets
         # CORPUS_IS_DEV in app.config at boot.
         "dev_mode": bool(current_app.config.get("CORPUS_IS_DEV")),
+        # Set by the launcher when the app window could not open and the
+        # app is being shown in a browser instead (window_fallback.py).
+        "window_error": _window_error,
     })
 
 
@@ -185,6 +194,11 @@ def set_config():
         cfg["corpus_dir"] = corpus
     if "mailto" in data:
         cfg["mailto"] = (data["mailto"] or "").strip()
+    if "theme" in data:
+        if data["theme"] not in THEMES:
+            return jsonify({"ok": False, "error": "bad_theme",
+                            "description": f"theme must be one of {', '.join(THEMES)}"}), 400
+        cfg["theme"] = data["theme"]
     _save_json_config(cfg)
     # Secrets go through Keychain, not the JSON file.
     keys = data.get("keys") or {}
@@ -220,6 +234,15 @@ def get_tooltips():
 # Set by launcher when it exposes pywebview to the app. When None, the
 # /api/pick-corpus endpoint returns 501 (browser fallback: user types path).
 _bridge = None
+_window_error = None
+
+
+def set_window_error(info):
+    """Called by launcher.py when the app window failed to open, with
+    `window_fallback.window_error_notice(...)`; GET /api/config reports it
+    so the page can say why it is in a browser."""
+    global _window_error
+    _window_error = info
 
 
 def set_bridge(bridge):

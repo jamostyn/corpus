@@ -261,6 +261,78 @@ window.NoteWorkspace = (function () {
     if (e.key === "Escape" && state.pickingHighlight) cancelPick();
   });
 
+  // ---------- the divider ------------------------------------------
+  //
+  // Dragging `#nw-split` sets how much of the window the note takes, as
+  // `--nw-note-pct` on the workspace (styles.css sizes both sides from
+  // it, so closing the panel still gives the note the whole window).
+  // Double-click returns to half and half. The share is kept in
+  // localStorage, so other note windows open at the same split.
+
+  const SPLIT_MIN = 20, SPLIT_MAX = 80, SPLIT_DEFAULT = 50;
+  const _SPLIT_KEY = "corpus.noteSplitPct";
+
+  /** The note's share (percent) for a pointer at `x` over a workspace
+   *  starting at `left` and `width` wide, kept within SPLIT_MIN..MAX so
+   *  neither side can be dragged shut. null when the width is unknown. */
+  function splitPercent(x, left, width) {
+    if (!(width > 0)) return null;
+    const pct = ((x - left) / width) * 100;
+    return Math.round(Math.min(SPLIT_MAX, Math.max(SPLIT_MIN, pct)) * 10) / 10;
+  }
+
+  function _setSplit(ws, pct) {
+    ws.style.setProperty("--nw-note-pct", String(pct));
+  }
+
+  function _savedSplit() {
+    try {
+      const v = parseFloat(localStorage.getItem(_SPLIT_KEY));
+      return v >= SPLIT_MIN && v <= SPLIT_MAX ? v : SPLIT_DEFAULT;
+    } catch (_) { return SPLIT_DEFAULT; }
+  }
+
+  function _wireSplit(ws, split) {
+    if (!ws || !split) return;
+    _setSplit(ws, _savedSplit());
+    let dragging = false;
+    const move = (e) => {
+      if (!dragging) return;
+      const r = ws.getBoundingClientRect();
+      const pct = splitPercent(e.clientX, r.left, r.width);
+      if (pct != null) _setSplit(ws, pct);
+    };
+    const end = () => {
+      if (!dragging) return;
+      dragging = false;
+      document.body.classList.remove("nw-resizing");
+      try { localStorage.setItem(_SPLIT_KEY, ws.style.getPropertyValue("--nw-note-pct")); }
+      catch (_) {}
+    };
+    split.addEventListener("pointerdown", (e) => {
+      dragging = true;
+      // The PDF iframe would swallow pointer events crossing it, ending
+      // the drag; `nw-resizing` turns them off while dragging, and the
+      // capture keeps the moves coming to the divider.
+      document.body.classList.add("nw-resizing");
+      try { split.setPointerCapture(e.pointerId); } catch (_) {}
+      e.preventDefault();
+    });
+    split.addEventListener("pointermove", move);
+    split.addEventListener("pointerup", end);
+    split.addEventListener("pointercancel", end);
+    split.addEventListener("dblclick", () => {
+      _setSplit(ws, SPLIT_DEFAULT);
+      try { localStorage.setItem(_SPLIT_KEY, String(SPLIT_DEFAULT)); } catch (_) {}
+    });
+  }
+
+  if (document.getElementById) {
+    _wireSplit(document.getElementById("note-workspace"),
+               document.getElementById("nw-split"));
+  }
+
   return { showPdf, closePanel, postToPanel, pickHighlight, cancelPick,
-           _received };
+           _received, splitPercent, _wireSplit,
+           SPLIT_MIN, SPLIT_MAX, SPLIT_DEFAULT };
 })();

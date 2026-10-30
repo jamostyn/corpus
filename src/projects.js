@@ -156,6 +156,7 @@ function renderProjectDetail() {
       <input class="pj-title" id="pj-title" type="text"
              value="${escAttr(p.title || "")}" placeholder="Untitled project"
              aria-label="Project title">
+      <button class="btn" id="pj-export-refs"${(p.counts && p.counts.paper) ? "" : " disabled"}>Export references…</button>
       <button class="btn danger" id="pj-delete">Delete project</button>
     </div>
     <textarea class="pj-desc" id="pj-desc" rows="2"
@@ -171,6 +172,10 @@ function _wireProjectDetail() {
   const pane = $("#project-detail");
   const p = state.projectDetail;
   if (!pane || !p) return;
+
+  // References of every paper in the project, in a chosen style (cite-ui.js).
+  const exp = $("#pj-export-refs");
+  if (exp) exp.addEventListener("click", () => CiteUI.openProjectExport(p));
 
   // Title + description: debounced save, same feel as the note editor.
   let t = null;

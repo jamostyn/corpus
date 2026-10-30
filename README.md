@@ -26,6 +26,9 @@ reviewed by the author.
   a rich-text Notes tab, and a pop-out reading window.
 - **Connections**: which of your papers cite each other, and who else
   cites them.
+- **Citations**: each paper in APA 7, MLA 9, Chicago, Harvard,
+  Vancouver or IEEE — in-text and reference-list forms, ready to copy —
+  and a project's whole reference list, copied or saved to a file.
 
 Your library is a folder you choose: the PDFs, plus one Markdown file
 per paper.
