@@ -7,22 +7,39 @@ the largest paper has ~105k citers and the panel needs 50 at a time.
 POST /fetch does the OpenAlex work under the shared progress channel, so
 the banner shows it like any other long job.
 
+GET /api/note/<id>/shared-citers (experimental) reads the stored lists of
+every paper a note links and returns the works citing two or more of
+them (`shared_citers.py`). The lists are read from disk; the one network
+use is the citation counts of the rows sent, remembered per server run.
+
 Wired in server.py via `app.register_blueprint(citers_bp)`.
 """
 from __future__ import annotations
 
 from flask import Blueprint, abort, jsonify, request
 
+import logging
+import time
+
 import progress
 from _api_common import _fm_dict, require_corpus_or_abort
 from _paths import summaries_dir
 from citations import build_index
 from citers import FIELDS, fetch_and_store, read_citers, split_by_corpus
+from notes_api import linked_paper_slugs, read_note
+from shared_citers import add_counts, paper_status, shared_citers
 
 citers_bp = Blueprint("citers", __name__)
+logger = logging.getLogger("corpus.citers_api")
 
 PAGE_DEFAULT = 50
 PAGE_MAX = 500
+# Shared citers outside the corpus sent per request. Two much-cited
+# papers can share thousands; the in-corpus ones are always sent whole.
+SHARED_PAGE_DEFAULT = 100
+# OpenAlex citation counts of shared citers, by OpenAlex id, for the life
+# of the server: reopening the dialog or paging back costs no requests.
+_SHARED_COUNTS: dict = {}
 CITER_PHASES = ["Resolving paper", "Fetching citers"]
 
 
@@ -138,3 +155,53 @@ def fetch_all_citers():
 
     threading.Thread(target=_run, daemon=True).start()
     return jsonify({"status": "started"}), 202
+
+
+@citers_bp.route("/api/note/<nid>/shared-citers", methods=["GET"])
+def note_shared_citers(nid):
+    """Works citing two or more of the papers a note links, from the
+    stored citer lists, each with its OpenAlex citation count (None when
+    the lookup failed; `counts_failed` says how many). `papers` says which
+    linked papers had a list to contribute, so a short answer can be
+    told apart from a missing one."""
+    require_corpus_or_abort()
+    t0 = time.monotonic()
+    note = read_note(nid)
+    index = build_index()
+    papers, payloads = [], {}
+    for slug in linked_paper_slugs(note.get("body_html") or ""):
+        md = summaries_dir() / f"{slug}.md"
+        if not md.exists():
+            continue                                  # a link to a removed paper
+        fm = _fm_dict(md)
+        doi = str(fm.get("doi") or "").strip()
+        data = read_citers(slug)
+        status = paper_status(data, bool(doi) and doi.lower() != "unknown")
+        papers.append({"slug": slug, "title": fm.get("title") or slug, "status": status})
+        if data is not None:
+            payloads[slug] = data
+
+    try:
+        limit = min(PAGE_MAX, max(1, int(request.args.get("limit", SHARED_PAGE_DEFAULT))))
+        offset = max(0, int(request.args.get("offset", 0)))
+    except ValueError:
+        abort(400, description="bad_paging")
+    found = shared_citers(payloads, index.doi_to_slugs)
+    inside = [c for c in found if c["slug"]]
+    outside = [c for c in found if not c["slug"]]
+    page = outside[offset:offset + limit]
+    # Only the rows sent are counted (~50 per OpenAlex request); the
+    # in-corpus ones are cached after the first page, so paging is cheap.
+    from openalex_client import openalex_works_by
+    counts_failed = add_counts(inside + page, _SHARED_COUNTS, openalex_works_by)
+    logger.info("shared_citers_found note=%s papers=%d with_lists=%d in_corpus=%d elsewhere=%d "
+                "counts_failed=%d elapsed=%.2f", nid, len(papers), len(payloads), len(inside),
+                len(outside), counts_failed, time.monotonic() - t0)
+    return jsonify({
+        "papers": papers,
+        "in_corpus": inside,
+        "elsewhere": page,
+        "elsewhere_total": len(outside),
+        "offset": offset,
+        "counts_failed": counts_failed,
+    })

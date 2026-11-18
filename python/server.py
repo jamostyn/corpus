@@ -198,6 +198,21 @@ if IS_DEV:
     except Exception:
         pass
     try:
+        from dev_only import classification as _dev_classification  # noqa: E402
+        _dev_classification.register(app)
+    except Exception:
+        pass
+    try:
+        from dev_only import citation_network as _dev_citation_network  # noqa: E402
+        _dev_citation_network.register(app)
+    except Exception:
+        pass
+    try:
+        from dev_only import classification_citations as _dev_class_citations  # noqa: E402
+        _dev_class_citations.register(app)
+    except Exception:
+        pass
+    try:
         from dev_only import client_errors as _dev_client_errors  # noqa: E402
         _dev_client_errors.register(app)
     except Exception:

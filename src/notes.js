@@ -194,6 +194,7 @@ function renderNoteDetail(host) {
         ${detachedNote
           ? `<button class="btn" id="btn-note-pick-hl">Link highlight</button>`
           : `<button class="btn" id="btn-note-popout" data-note-id="${escAttr(n.id)}">${NEW_WINDOW_LABEL} ⧉</button>`}
+        <button class="btn" id="btn-note-shared-citers" disabled>Shared citers</button>
         <div class="note-settings">
           <button type="button" class="btn" id="btn-note-settings"
                   aria-haspopup="menu" aria-expanded="false">Settings</button>
@@ -236,6 +237,19 @@ function _wireNoteEditor(n) {
   if (popBtn) popBtn.addEventListener("click",
     () => openDetached("note", popBtn.dataset.noteId));
 
+  // Shared citers (experimental): enabled once the note links two or
+  // more papers, re-checked on every edit (scheduleSave). Saves first,
+  // so the server reads the links on screen.
+  const scBtn = $("#btn-note-shared-citers");
+  const scSync = () => {
+    scBtn.disabled = SharedCiters.linkedCount(body) < SharedCiters.MIN_PAPERS;
+  };
+  scSync();
+  scBtn.addEventListener("click", async () => {
+    await flushNoteSave();
+    SharedCiters.open(n.id);
+  });
+
   const pickBtn = $("#btn-note-pick-hl");
   if (pickBtn) pickBtn.addEventListener("click", () => {
     // Remember where the caret is: arming the pick moves focus into
@@ -244,9 +258,9 @@ function _wireNoteEditor(n) {
     // reasoning as _openEntityLinkPicker's savedRange.
     const sel = document.getSelection();
     const savedRange = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
-    NoteWorkspace.pickHighlight(({ kind, slug, id, text }) => {
+    NoteWorkspace.pickHighlight(({ kind, slug, id, page }) => {
       if (!slug || !id) return;
-      _insertHighlightLink(body, savedRange, kind || "paper", slug, id, text);
+      _insertHighlightLink(body, savedRange, kind || "paper", slug, id, page);
       _historyCheckpoint(n.id, title, body);
       scheduleSave();
     });
@@ -269,6 +283,7 @@ function _wireNoteEditor(n) {
   // would only be refused again, and silently.
   let conflict = false;
   const scheduleSave = () => {
+    scSync();
     if (conflict) return;
     if (saveTimer) clearTimeout(saveTimer);
     status.textContent = "…";
@@ -1067,6 +1082,8 @@ function _applyNoteFontSizePx(root, px) {
 const _NOTE_TABLE_EDGE_PX = 6;       // proximity zone for the resize cursor
 const _NOTE_TABLE_MIN_CELL = 24;      // don't let a col/row shrink below this
 const _NOTE_TABLE_MAX_TOTAL = 4000;   // matches server sanitiser cap
+const _NOTE_TABLE_SCROLL_ZONE = 40;   // px inside the note's right edge where a width drag starts scrolling
+const _NOTE_TABLE_SCROLL_MAX = 24;    // px scrolled per frame with the pointer at (or past) the edge
 
 function _promptInsertNoteTable(body) {
   const rowsIn = prompt("Rows?", "3");
@@ -1228,6 +1245,16 @@ function _wireNoteTables(body, onChanged) {
   });
 }
 
+/** Pixels to scroll the note this frame for a width drag whose pointer is
+ *  at `x`, given the note's visible right edge. 0 until the pointer is
+ *  within _NOTE_TABLE_SCROLL_ZONE of the edge, then faster the closer it
+ *  gets, full speed at or past the edge. */
+function _noteTableEdgeScroll(x, right) {
+  const into = x - (right - _NOTE_TABLE_SCROLL_ZONE);
+  if (into <= 0) return 0;
+  return Math.ceil(_NOTE_TABLE_SCROLL_MAX * Math.min(1, into / _NOTE_TABLE_SCROLL_ZONE));
+}
+
 function _startNoteTableResize(e, table, hit, onChanged) {
   const cols = Array.from(table.querySelectorAll("colgroup > col"));
   const rows = Array.from(table.querySelectorAll("tr"));
@@ -1236,9 +1263,18 @@ function _startNoteTableResize(e, table, hit, onChanged) {
   const origTotalW = origColW.reduce((a, b) => a + b, 0);
   const origTotalH = origRowH.reduce((a, b) => a + b, 0);
   const startX = e.clientX, startY = e.clientY;
+  // Width drags scroll the note sideways when the pointer reaches its
+  // right edge, so a table can be dragged out past what is on screen.
+  // dx counts the scrolled distance too: the table moves left under a
+  // still pointer as the note scrolls.
+  const scroller = (hit.mode === "col" || hit.mode === "table-corner")
+    ? table.closest(".note-body") : null;
+  const startScroll = scroller ? scroller.scrollLeft : 0;
+  let last = e, frame = 0;
 
-  const doMove = (ev) => {
-    const dx = ev.clientX - startX;
+  const apply = (ev) => {
+    const scrolled = scroller ? scroller.scrollLeft - startScroll : 0;
+    const dx = ev.clientX - startX + scrolled;
     const dy = ev.clientY - startY;
     if (hit.mode === "table-corner") {
       // Width from the corner moves the last column only, like the edge.
@@ -1266,7 +1302,25 @@ function _startNoteTableResize(e, table, hit, onChanged) {
       rows[hit.idx].style.height = `${newRowH}px`;
     }
   };
+  const doMove = (ev) => { last = ev; apply(ev); };
+  // One frame of edge scrolling, repeated while the button is held, so a
+  // pointer resting at the edge keeps going. The table is widened first —
+  // the note cannot scroll past its own content — then scrolled, then
+  // re-sized from the real scroll position (which stops at the 4000 px cap).
+  const tick = () => {
+    frame = 0;
+    const step = _noteTableEdgeScroll(last.clientX, scroller.getBoundingClientRect().right);
+    if (step) {
+      const before = scroller.scrollLeft;
+      apply({ clientX: last.clientX + step, clientY: last.clientY });
+      scroller.scrollLeft = before + step;
+      apply(last);
+    }
+    frame = requestAnimationFrame(tick);
+  };
+  if (scroller) frame = requestAnimationFrame(tick);
   const doUp = () => {
+    if (frame) cancelAnimationFrame(frame);
     document.removeEventListener("mousemove", doMove);
     document.removeEventListener("mouseup",   doUp);
     onChanged();
@@ -1439,6 +1493,15 @@ function _entityLinkHtml(mode, id, label) {
          `data-open-${mode.linkAttr}="${escAttr(id)}">${escHtml(label)}</a>`;
 }
 
+/** Picker rows for one entity type: `label` is what the row shows,
+ *  `text` is what the inserted link says (`linkText`, else the label). */
+function _pickerItems(mode, rows) {
+  return rows.map(r => {
+    const label = mode.linkLabel(r);
+    return { id: mode.linkId(r), label, text: mode.linkText ? mode.linkText(r) || label : label };
+  });
+}
+
 /** A link to one highlight inside a paper or a document.
  *
  *  Carries BOTH `data-open-<kind>` and `data-open-highlight`. The kind
@@ -1474,12 +1537,17 @@ function _restoreCaret(body, savedRange) {
   }
 }
 
-function _insertHighlightLink(body, savedRange, kind, slug, highlightId, text) {
+/** What a highlight link says: the slug and the highlight's page
+ *  ("pan-2025-1, p. 4"), not the quote (2026-11-12). The slug alone when
+ *  the page is unknown. */
+function _highlightLinkLabel(slug, page) {
+  const p = Number(page);
+  return Number.isInteger(p) && p > 0 ? `${slug}, p. ${p}` : slug;
+}
+
+function _insertHighlightLink(body, savedRange, kind, slug, highlightId, page) {
   _restoreCaret(body, savedRange);
-  // The highlight's own text is the label — that is the "linked full
-  // quote". Falls back to the slug when the viewer
-  // could not read any text for it.
-  const label = (text || "").trim() || slug;
+  const label = _highlightLinkLabel(slug, page);
   document.execCommand("insertHTML", false,
                        _highlightLinkHtml(kind, slug, highlightId, label) + "&nbsp;");
 }
@@ -1584,9 +1652,9 @@ function _openEntityLinkPicker(savedRange, body, onInserted) {
     // Sort BEFORE the 200-row cap, or "newest first" would only reorder
     // whichever 200 rows happened to come first.
     const cur = sortFor(active);
-    const items = Sorting.sortRows(active.sorts, rows.filter(r => modeRowMatches(active, r, q)),
-                                   cur.key, cur.dir)
-      .map(r => ({ id: active.linkId(r), label: active.linkLabel(r) }))
+    const sorted = Sorting.sortRows(active.sorts, rows.filter(r => modeRowMatches(active, r, q)),
+                                   cur.key, cur.dir);
+    const items = _pickerItems(active, sorted)
       .filter(x => x.id)
       .slice(0, 200);
     if (!items.length) {
@@ -1594,11 +1662,12 @@ function _openEntityLinkPicker(savedRange, body, onInserted) {
         rows.length ? "No matches." : "Nothing to link to yet."}</li>`;
       return;
     }
-    resultsEl.innerHTML = items.map(x =>
-      `<li><button type="button" class="note-link-hit" data-id="${escAttr(x.id)}"
+    resultsEl.innerHTML = items.map((x, i) =>
+      `<li><button type="button" class="note-link-hit" data-i="${i}"
            >${escHtml(x.label)}</button></li>`).join("");
     resultsEl.querySelectorAll(".note-link-hit").forEach(btn => {
-      btn.addEventListener("click", () => insert(btn.dataset.id, btn.textContent));
+      const x = items[Number(btn.dataset.i)];
+      btn.addEventListener("click", () => insert(x.id, x.text));
     });
   };
 

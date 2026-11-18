@@ -148,3 +148,16 @@ def test_other_classes_on_links_are_still_stripped():
         '<a href="#" class="btn danger note-entity-link" data-open-paper="x">t</a>')
     assert "btn" not in out and "danger" not in out
     assert "note-entity-link" in out
+
+
+def test_paper_links_insert_the_slug():
+    """Catches: the papers MODES entry losing `linkText`, or the picker
+    inserting the clicked row's text (the title) instead of the item's
+    `text`. Either way a linked paper would read as its full title again."""
+    src = _APP_JS.read_text(encoding="utf-8")
+    start = src.find('{ id: "papers"')
+    entry = src[start:src.find('{ id: "', start + 1)]
+    assert "linkText: (r) => r.slug" in entry
+    notes = (_APP_JS.parent / "notes.js").read_text(encoding="utf-8")
+    assert "insert(x.id, x.text)" in notes
+    assert "btn.textContent" not in notes[notes.index("const renderResults"):]

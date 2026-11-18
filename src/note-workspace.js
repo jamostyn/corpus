@@ -215,7 +215,7 @@ window.NoteWorkspace = (function () {
   }
 
   /** Arm highlight-pick mode: the next highlight clicked in the panel
-   *  is returned to `onPicked({slug, id, text})`. */
+   *  is returned to `onPicked({kind, slug, id, page})`. */
   let _onPicked = null;
   function pickHighlight(onPicked) {
     if (!state.panelSlug) {
@@ -238,7 +238,7 @@ window.NoteWorkspace = (function () {
   }
 
   /** Called by the message listener when the viewer reports a pick. */
-  function _received(id, text) {
+  function _received(id, page) {
     const cb = _onPicked;
     const i = (state.panelSlug || "").indexOf(":");
     const kind = i === -1 ? "paper" : state.panelSlug.slice(0, i);
@@ -246,7 +246,7 @@ window.NoteWorkspace = (function () {
     state.pickingHighlight = false;
     _onPicked = null;
     document.body.classList.remove("corpus-picking");
-    if (cb) cb({ kind, slug, id, text: text || "" });
+    if (cb) cb({ kind, slug, id, page });
   }
 
   // Messages from the panel's viewer. A separate listener from
@@ -254,7 +254,7 @@ window.NoteWorkspace = (function () {
   window.addEventListener("message", (e) => {
     const d = e && e.data;
     if (!d || d.source !== "corpus-highlights") return;
-    if (d.type === "highlight-picked") _received(d.id, d.text);
+    if (d.type === "highlight-picked") _received(d.id, d.page);
   });
 
   document.addEventListener("keydown", (e) => {

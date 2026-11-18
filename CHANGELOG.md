@@ -3,6 +3,26 @@
 What changed for users in each release. Downloads are on the
 [Releases page](https://github.com/jamostyn/corpus/releases).
 
+## 0.4.5 — 2026-11-18
+
+Mac only for now; the Windows download stays 0.4.2.
+
+- Notes: linking a paper inserts its slug (e.g. `pan-2025-1`) instead of
+  its title; the picker still lists papers by title.
+- Notes: a highlight link says the paper's slug and the highlight's page
+  (`pan-2025-1, p. 4`) instead of the highlighted text.
+- Note tables can be wider than the note: drag the right edge past the
+  edge and the note scrolls along.
+- Back now goes back on the first press after opening a tab or following
+  a link (it used to need two).
+- Notes (experimental): `Shared citers` lists works citing two or more
+  of the papers a note links — in your library or not — from the
+  citer lists already stored, each with its citation count (OpenAlex).
+- Import picks the paper's own DOI when the first page also prints the
+  DOI of a paper it cites.
+- SSRN papers are identified from the SSRN link printed on them.
+- A title broken across lines at a hyphen is read as one title.
+
 ## 0.4.4 — 2026-10-30
 
 Mac only for now; the Windows download stays 0.4.2 until a 0.4.4

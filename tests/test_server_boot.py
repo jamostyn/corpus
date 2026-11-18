@@ -47,6 +47,7 @@ SHIPPED_ROUTES = {
     "/api/paper/<slug>/citers",
     "/api/paper/<slug>/citers/fetch",
     "/api/citers/fetch-all",
+    "/api/note/<nid>/shared-citers",
     "/api/documents",
     "/api/document/<doc_id>",
     "/api/document/<doc_id>/highlights",

@@ -33,7 +33,7 @@ def test_the_tabs_are_in_the_four_agreed_groups():
         ["papers", "documents"],
         ["authors", "institutions", "journals"],
         ["notes", "projects"],
-        ["testing", "graph", "exploration"],
+        ["testing", "graph", "exploration", "classification"],
     ]
 
 
@@ -43,7 +43,7 @@ def test_only_experimental_tabs_sit_in_the_hidden_experimental_group():
     empty experimental pill in shipped builds."""
     app = (_ROOT / "src" / "app.js").read_text(encoding="utf-8")
     dev_modes = set(re.findall(r'\{ id: "(\w+)"[^}]*?devOnly: true', app, re.S))
-    assert dev_modes == {"testing", "graph", "exploration"}
+    assert dev_modes == {"testing", "graph", "exploration", "classification"}
     groups = _groups()
     exp = [g for g in groups if "tab-group-experimental" in g["cls"]]
     assert len(exp) == 1 and set(exp[0]["tabs"]) == dev_modes

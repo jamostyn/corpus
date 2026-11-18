@@ -78,6 +78,9 @@ const state = {
   explorationItems: [],      // dev-only Exploration tab: recommended papers shown
   explorationFilter: "",
   selectedExplorationId: null,
+  classificationViews: [],   // dev-only Classification learning tab: its views
+  classificationFilter: "",
+  selectedClassificationView: null,
   projectDetail: null,       // /api/project/<id> response (carries `resolved`)
 };
 
@@ -171,6 +174,10 @@ const MODES = [
     linkId: (r) => r.slug,
     linkLabel: (r) => [r.title && r.title !== "unknown" ? r.title : r.slug,
                        r.year && r.year !== "unknown" ? `(${r.year})` : ""].filter(Boolean).join(" "),
+    // Text a link inserted into a note shows. The picker row still shows
+    // `linkLabel` (the title is how a paper is found); the link itself is
+    // the short slug. Modes without one insert their `linkLabel`.
+    linkText: (r) => r.slug,
     // Sort options — the ONE list behind the Papers sidebar's "Sort by"
     // and the note link picker's (see src/sorting.js). Order = menu order.
     sorts: [
@@ -307,6 +314,19 @@ const MODES = [
     emptyStateHtml: () => "<p>No recommended papers waiting.</p>",
     searchFields: (r) => [r.title, r.authors, r.venue],
     searchHint: "title, author or journal" },
+  // DEV ONLY — classification-learning papers, for clustering (2026-11-04).
+  { id: "classification", stateKey: "classificationViews", filterKey: "classificationFilter",
+    selectedKey: "selectedClassificationView",
+    listId: "classification-list", filterId: "classification-filter", detailId: "classification-detail",
+    dataAttr: "data-classification-view",
+    load:         () => window.DevClassification && window.DevClassification.load(),
+    render:       () => window.DevClassification && window.DevClassification.render(),
+    select:       (id) => window.DevClassification && window.DevClassification.select(id),
+    renderDetail: () => window.DevClassification && window.DevClassification.renderDetail(),
+    loadPolicy: "always", devOnly: true,
+    emptyStateHtml: () => "<p>No classification-learning papers yet.</p>",
+    searchFields: (r) => [r.title],
+    searchHint: "view name" },
 ];
 const MODES_BY_ID = Object.fromEntries(MODES.map(m => [m.id, m]));
 
@@ -339,13 +359,21 @@ function _currentPlace() {
   return { mode: state.mode, id: (m && state[m.selectedKey]) || null };
 }
 
-function _recordPlace() {
+// `viaTab`: recorded by a tab switch. A select that follows in the SAME
+// tab replaces that entry instead of adding one (2026-11-12). Opening a
+// tab and then picking something — or a note link to a paper, which
+// switches tab and then selects — is one move. Kept as two, Back first
+// landed on the tab-only entry: the same tab with no new selection, so
+// nothing visibly moved except the forward arrow lighting up.
+function _recordPlace(viaTab = false) {
   if (state.navigating) return;      // moving through history is not a new place
   const p = _currentPlace();
   const cur = state.history[state.historyAt];
   if (cur && cur.mode === p.mode && cur.id === p.id) return;   // no-op move
   // Any new move truncates the forward branch, exactly like a browser.
   state.history = state.history.slice(0, state.historyAt + 1);
+  if (cur && cur.viaTab && cur.mode === p.mode) state.history.pop();
+  if (viaTab) p.viaTab = true;
   state.history.push(p);
   if (state.history.length > HISTORY_MAX) state.history.shift();
   state.historyAt = state.history.length - 1;
@@ -605,7 +633,8 @@ function _loadDevOnly() {
   document.querySelectorAll(".tabs [data-dev-only]").forEach(t => { t.hidden = false; });
 
   ["/dev_only/bug-reporter.css", "/dev_only/tooltip-editor.css", "/dev_only/planning.css",
-   "/dev_only/testing.css", "/dev_only/graph.css", "/dev_only/exploration.css"].forEach(href => {
+   "/dev_only/testing.css", "/dev_only/graph.css", "/dev_only/exploration.css",
+   "/dev_only/classification.css"].forEach(href => {
     const css = document.createElement("link");
     css.rel = "stylesheet";
     css.href = href;
@@ -628,7 +657,8 @@ function _loadDevOnly() {
      // THREE), then the model, then the view that uses all three.
      "/dev_only/vendor/three.min.js", "/dev_only/vendor/OrbitControls.js",
      "/dev_only/graph-model.js", "/dev_only/graph.js",
-     "/dev_only/exploration.js"].forEach(src => {
+     "/dev_only/exploration.js", "/dev_only/classification.js",
+     "/dev_only/classification-network.js"].forEach(src => {
       const s = document.createElement("script");
       s.src = src;
       s.async = false;
@@ -1081,7 +1111,7 @@ function switchMode(id) {
     if (btn) btn.hidden = (other.actionBtnId !== activeActionBtn);
   }
 
-  _recordPlace();
+  _recordPlace(true);
 
   // Load / render the list per the mode's loadPolicy.
   const corpusReady = Boolean(state.config?.corpus_dir);

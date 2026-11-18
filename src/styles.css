@@ -1701,7 +1701,10 @@ body.corpus-detached .paper-detail .pd-authors { font-size: 12px; margin-bottom:
   border-collapse: collapse;
   table-layout: fixed;
   margin: 12px 0;
-  max-width: 100%;
+  /* No max-width: a table may be wider than the note, which then scrolls
+     sideways (overflow-y: auto makes .note-body's x overflow auto too).
+     Dragging the right edge past the note's edge scrolls it along
+     (_noteTableEdgeScroll, 2026-11-12). */
   background: var(--bg-panel);
 }
 .note-body table.note-table td,
@@ -2260,3 +2263,36 @@ body.corpus-detached-note .nw-note .note-body { height: auto; flex: 1; }
 .window-notice .wn-text { flex: 1; }
 .window-notice .wn-detail { opacity: 0.75; font-size: 12px; margin-top: 2px; }
 .window-notice a { color: inherit; text-decoration: underline; }
+
+/* Shared citers dialog (src/shared-citers.js) */
+.shared-citers .modal { width: min(820px, 92vw); }
+.sc-body { max-height: 70vh; overflow-y: auto; }
+.sc-summary { margin: 0 0 10px; color: var(--fg-muted); }
+.sc-notes { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.sc-note {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 12px; border-radius: 6px; font-size: 13px;
+  background: var(--bg-sunk); color: var(--fg-muted);
+}
+.sc-group {
+  display: flex; align-items: center; gap: 8px;
+  margin: 18px 0 6px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.sc-count {
+  font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 10px;
+  background: var(--bg-sunk); color: var(--fg-muted);
+}
+.sc-list { list-style: none; padding: 0; margin: 0; }
+.sc-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.sc-item:last-child { border-bottom: 0; }
+.sc-title { font-weight: 600; line-height: 1.35; }
+.sc-meta { margin-top: 3px; font-size: 13px; color: var(--fg-muted); }
+.sc-meta a { word-break: break-all; }
+.sc-meta .ref-incorpus { margin-left: 6px; word-break: normal; }
+.sc-dot { margin: 0 4px; }
+.sc-cites { margin-top: 3px; font-size: 12px; color: var(--fg-muted); }
+.sc-badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+  padding: 2px 6px; border-radius: 4px; vertical-align: middle;
+  background: var(--warn-bg); color: var(--warn-fg);
+}

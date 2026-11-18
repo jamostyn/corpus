@@ -1047,7 +1047,7 @@
           source: "corpus-highlights",
           type:   "highlight-picked",
           id:     picked.id,
-          text:   String(picked.text || ""),
+          page:   picked.page,
         }, "*");
       } catch (_) {}
       return;

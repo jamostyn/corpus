@@ -152,3 +152,23 @@ def test_a_title_whose_last_line_is_set_smaller_keeps_it(tmp_path):
                           ("Timo Flesch, David Nagy, Andrew Saxe", 10)])
     got = E._title_candidates_from_pdf_text(pdf)
     assert got and got[0] == "Continual learning with Hebbian gating and exponentially decaying task signals"
+
+
+def test_a_title_line_ending_in_a_hyphen_takes_the_next_line(tmp_path):
+    """Catches a title broken at "Information-" searched as two half
+    titles (blanco-2017's accepted manuscript, 2026-11-11), in both the
+    font-size path and the uniform-font line scan, and the join adding a
+    space inside "Information-Integration"."""
+    first, second = ("Transcranial Infrared Laser Stimulation Improves Rule-Based, but not Information-",
+                     "Integration, Category Learning in Humans")
+    whole = first + second
+    tier = [(100.0, 60.0, first)]
+    lines = [(18.0, 100.0, 60.0, first), (18.0, 124.0, 60.0, second)]
+    assert E._join_lines(t for _y, _x, t in E._complete_dangling_title(tier, lines)) == whole
+    import fitz
+    pdf = tmp_path / "x.pdf"
+    d = fitz.open(); page = d.new_page(width=700)
+    for i, line in enumerate([first, second, "Nathaniel J. Blanco and F. Gonzalez-Lima"]):
+        page.insert_text((40, 72 + 14 * i), line, fontsize=12)
+    d.save(str(pdf))
+    assert E._line_scan_candidates(pdf)[0] == whole

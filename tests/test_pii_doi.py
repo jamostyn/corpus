@@ -53,3 +53,30 @@ def test_the_registry_gate_refuses_front_matter_figures_and_unknown_dois(monkeyp
     assert not E._is_registered_paper("10.1/editors")
     assert not E._is_registered_paper("10.1/missing")
     assert not E._is_registered_paper("10.1/fig")
+
+
+def test_an_ssrn_link_becomes_its_doi():
+    """Catches the SSRN abstract id missed, read from another number, or
+    the DOI built with the wrong prefix; the same id twice gives one DOI."""
+    text = ("Electronic copy available at: http://ssrn.com/abstract=2016598 N.° 5 "
+            "Electronic copy available at: https://ssrn.com/abstract=2016598 ISSN 1234-5678")
+    assert E.dois_from_ssrn_text(text) == ["10.2139/ssrn.2016598"]
+    assert E.dois_from_ssrn_text("abstract=2016598, ssrn 2016598") == []
+
+
+def test_import_uses_the_ssrn_link_when_no_doi_is_printed(tmp_path, monkeypatch):
+    """Catches the SSRN step not running (how the Alonso-Diaz 2011 working
+    paper imported with no metadata, 2026-11-11), or its DOI skipping the
+    registry gate."""
+    pdf = tmp_path / "x.pdf"
+    import fitz
+    d = fitz.open(); d.new_page().insert_text((72, 72), "Electronic copy available at: http://ssrn.com/abstract=2016598")
+    d.save(str(pdf))
+    seen = []
+    monkeypatch.setattr(E, "_rank_dois", lambda text: [])
+    monkeypatch.setattr(E, "_is_registered_paper", lambda doi: seen.append(doi) or True)
+    monkeypatch.setattr(E, "_collect_api_metadata",
+                        lambda doi: ({"doi": doi, "title": "Probabilistic Categorization with Meaningful Information"}, {}, {}))
+    monkeypatch.setattr(E, "_resolve_by_title", lambda *a: ({}, {}, {}))
+    assert E.extract_metadata(pdf)["doi"] == "10.2139/ssrn.2016598"
+    assert seen == ["10.2139/ssrn.2016598"]

@@ -4,6 +4,7 @@ Owns:
   * The five note endpoints (list, create, get, put, delete).
   * The HTML sanitiser + its allow-list constants.
   * Notes-JSON storage helpers (id generation, sidebar-row shape).
+  * `linked_paper_slugs` — which papers a note links.
 
 Notes files live at `<corpus_dir>/notes/<id>.json` (see _paths.notes_dir()).
 
@@ -272,6 +273,29 @@ def _note_row(path: Path) -> dict:
     }
 
 
+_PAPER_LINK_RE = re.compile(r"""data-open-paper=(["'])(.*?)\1""")
+
+
+def linked_paper_slugs(body_html: str) -> list[str]:
+    """Every paper slug a note body links, once each, in order of first
+    appearance. Highlight links count: they carry `data-open-paper` too.
+    Values the sanitizer would reject are skipped."""
+    out: list[str] = []
+    for _q, slug in _PAPER_LINK_RE.findall(body_html or ""):
+        slug = _htmllib.unescape(slug)
+        if _NOTE_LINK_VALUE_RE.match(slug) and slug not in out:
+            out.append(slug)
+    return out
+
+
+def read_note(nid: str) -> dict:
+    """The stored note, or a 404."""
+    p = notes_dir() / f"{nid}.json"
+    if not _NOTE_LINK_VALUE_RE.match(nid or "") or not p.exists():
+        abort(404, description="note_missing")
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
 # ---------- Endpoints -----------------------------------------------
 
 @notes_bp.route("/api/notes", methods=["GET"])
@@ -308,10 +332,7 @@ def create_note():
 @notes_bp.route("/api/note/<nid>", methods=["GET"])
 def get_note(nid):
     require_corpus_or_abort()
-    p = notes_dir() / f"{nid}.json"
-    if not p.exists():
-        abort(404, description="note_missing")
-    return jsonify(json.loads(p.read_text(encoding="utf-8")))
+    return jsonify(read_note(nid))
 
 
 @notes_bp.route("/api/note/<nid>", methods=["PUT"])

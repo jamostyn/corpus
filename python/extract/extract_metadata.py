@@ -481,9 +481,9 @@ def _line_scan_candidates(pdf: Path, max_candidates: int = 3) -> list[str]:
     raw_lines = text.splitlines()
     for i, raw in enumerate(raw_lines):
         line = _clean_candidate(raw)
-        # A title wrapped onto the next line (it ends on "and", "of", …).
-        if line.split() and line.split()[-1].lower().strip(",:;") in _DANGLING_END and i + 1 < len(raw_lines):
-            line = _clean_candidate(line + " " + raw_lines[i + 1])
+        # A title wrapped onto the next line (it ends on "and", "of", "-" …).
+        if _wraps(line) and i + 1 < len(raw_lines):
+            line = _clean_candidate(_join_lines([line, raw_lines[i + 1]]))
         if len(line) < 20 or len(line) > 250:
             continue
         low = line.lower()
@@ -541,15 +541,32 @@ _DANGLING_END = frozenset("a an and as at by for from in into of on or the to vi
 TITLE_NEXT_LINE_SIZES = 2.0
 
 
+def _wraps(text: str) -> bool:
+    """Does a title line go on to the next one? It ends on a word no title
+    ends on ("and", "of", …) or on a hyphen: "…but not Information-" /
+    "Integration, Category Learning in Humans" (blanco-2017's accepted
+    manuscript, 2026-11-11) was searched as two half titles."""
+    words = (text or "").strip().split()
+    return bool(words) and (words[-1].lower().strip(",:;") in _DANGLING_END or words[-1].endswith("-"))
+
+
+def _join_lines(texts) -> str:
+    """Title lines as one string; a line-end hyphen joins without a space."""
+    out = ""
+    for t in texts:
+        t = t.strip()
+        out = out + t if out.endswith("-") else (out + " " + t if out else t)
+    return out
+
+
 def _complete_dangling_title(tier: list, lines: list) -> list:
     """`tier` [(y, x, text)] plus the line printed right below it, when the
-    tier's text ends on a word no title ends on. `lines` is every page-1
-    line as (size, y, x, text)."""
+    tier's text runs on (`_wraps`). `lines` is every page-1 line as
+    (size, y, x, text)."""
     if not tier:
         return tier
     last_y, _x, last_text = max(tier)
-    words = last_text.strip().split()
-    if not words or words[-1].lower().strip(",:;") not in _DANGLING_END:
+    if not _wraps(last_text):
         return tier
     size = max((sz for sz, y, x, t in lines if (y, x, t) == (last_y, _x, last_text)), default=0.0)
     below = sorted((y, x, t) for _size, y, x, t in lines
@@ -619,7 +636,7 @@ def _title_candidates_from_pdf_text(pdf: Path, max_candidates: int = 3) -> list[
     out: list[str] = []
     for tier in tiers:
         tier = _complete_dangling_title(tier, lines)
-        candidate = _clean_candidate(" ".join(t for _, _, t in sorted(tier)))
+        candidate = _clean_candidate(_join_lines(t for _, _, t in sorted(tier)))
         if len(candidate) < 15 or len(candidate) > 250:
             continue
         if not _looks_like_real_title(candidate):
@@ -920,6 +937,24 @@ def authors_on_page(records: tuple, page_text: str) -> bool | None:
     return None
 
 
+def title_on_page(records: tuple, page_text: str) -> bool | None:
+    """Is the found record's title printed on the PDF's first page?
+
+    True / False when a record has a title long enough to test, None
+    when none does. Compares letters and digits only, so line breaks,
+    hyphenation and ligatures ("ﬁ") in the PDF text don't matter. The
+    first 40 characters are enough: subtitles vary between sources.
+    Measured 2026-11-11: Weichart et al. (2022) prints the DOI of the
+    Meier & Blair (2013) dataset it reuses ABOVE its own DOI on page 1,
+    both scored alike, and the import filed it as meier-2013."""
+    squash = lambda s: re.sub(r"[^a-z0-9]", "", _fold(s))
+    for rec in records:
+        key = squash((rec or {}).get("title"))[:40]
+        if len(key) >= 15:
+            return key in squash(page_text)
+    return None
+
+
 def _resolve_by_title(title: str, page_text: str = "") -> tuple[dict, dict, dict]:
     """(crossref, openalex, semanticscholar) dicts for the paper `title`
     names, or three empties.
@@ -1031,11 +1066,34 @@ def dois_from_arxiv_text(text: str) -> list[str]:
     return out
 
 
-def _dois_from_pii(pdf: Path) -> list[str]:
+# SSRN's own DOI is "10.2139/ssrn." + the abstract id every SSRN copy
+# prints ("Electronic copy available at: http://ssrn.com/abstract=2016598").
+_SSRN_RE = re.compile(r"ssrn\.com/abstract=(\d{4,9})", re.I)
+
+
+def dois_from_ssrn_text(text: str) -> list[str]:
+    """SSRN DOIs for every SSRN abstract link in `text`, first seen first."""
+    out = []
+    for sid in _SSRN_RE.findall(text or ""):
+        d = f"10.2139/ssrn.{sid}"
+        if d not in out:
+            out.append(d)
+    return out
+
+
+def _info_and_page_one(pdf: Path) -> str:
     import fitz
     with fitz.open(str(pdf)) as d:
         info = " ".join(str(v) for v in (d.metadata or {}).values() if v)
-    return dois_from_pii_text(info + " " + extract_pdf_text(pdf, max_pages=1))
+    return info + " " + extract_pdf_text(pdf, max_pages=1)
+
+
+def _dois_from_pii(pdf: Path) -> list[str]:
+    return dois_from_pii_text(_info_and_page_one(pdf))
+
+
+def _dois_from_ssrn(pdf: Path) -> list[str]:
+    return dois_from_ssrn_text(_info_and_page_one(pdf))
 
 
 def extract_metadata(pdf: Path) -> dict:
@@ -1103,10 +1161,16 @@ def extract_metadata(pdf: Path) -> dict:
     #  * The top hit might resolve to a non-paper resource — a PLoS
     #    figure DOI (.g001), a NIMH dataset DOI, a supplement — in
     #    which case we skip via _NON_PAPER_TYPES and try the next.
+    #  * The top hit might be a real paper the PDF only cites (a
+    #    dataset source in the author note). A paper whose title is
+    #    printed on page 1 wins; failing that, the first registered
+    #    paper is kept, as before, for PDFs whose title text is garbled.
     if not api_hit:
         try:
             head_text = extract_pdf_text(pdf, max_pages=3)
+            page_one = extract_pdf_text(pdf, max_pages=1)
             ranked = _rank_dois(head_text)
+            first_hit = None
             for text_doi, _score in ranked[:5]:
                 # GATE on Crossref: Crossref is the authoritative DOI
                 # registry and returns strict 404 for unregistered
@@ -1118,10 +1182,17 @@ def extract_metadata(pdf: Path) -> dict:
                 if not _is_registered_paper(text_doi):
                     continue
                 # Passed both gates — do the full 3-source lookup.
-                cr, oa, ss = _collect_api_metadata(text_doi)
-                if cr or oa or ss:
+                found = _collect_api_metadata(text_doi)
+                if not any(found):
+                    continue
+                if title_on_page(found, page_one) is not False:
+                    cr, oa, ss = found
                     api_hit = True
                     break
+                first_hit = first_hit or found
+            if not api_hit and first_hit:
+                cr, oa, ss = first_hit
+                api_hit = True
         except Exception:
             pass  # PDF unreadable / no text layer — fall through to title search
 
@@ -1131,9 +1202,13 @@ def extract_metadata(pdf: Path) -> dict:
     # + the PII. johansen-2002 (Cognitive Psychology) imported with no
     # metadata at all because of this. The DOI still has to pass the same
     # registry and paper-type gates as any other.
+    #
+    # SSRN copies (2026-11-11) print the same kind of id: an SSRN abstract
+    # link and no DOI, and the title search missed the Alonso-Diaz 2011
+    # working paper although Crossref holds it under its SSRN DOI.
     if not api_hit:
         try:
-            for pii_doi in _dois_from_pii(pdf):
+            for pii_doi in _dois_from_pii(pdf) + _dois_from_ssrn(pdf):
                 if _is_registered_paper(pii_doi):
                     cr, oa, ss = _collect_api_metadata(pii_doi)
                     if cr or oa or ss:

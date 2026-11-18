@@ -259,3 +259,20 @@ def test_a_highlight_link_scrolls_in_the_docked_view_too():
     blk = src[src.index("switchMode(entityLink.m.id);"):]
     blk = blk[:blk.index("} else if (revealLink)")]
     assert "_scrollPaperPaneToHighlight(hid)" in blk
+
+
+def test_the_picked_highlight_page_reaches_the_link():
+    """Catches: the page being dropped on its way from the viewer to the
+    note. Three files hand it on (viewer message → workspace callback →
+    link label); losing it at any step makes every link say the slug
+    alone, with no error."""
+    viewer = _nocomments(_read(_VIEWER))
+    blk = viewer[viewer.index('type:   "highlight-picked"'):]
+    assert "page:   picked.page" in blk[:300]
+    ws = _nocomments(_read(_NOTES.parent / "note-workspace.js"))
+    assert "_received(d.id, d.page)" in ws
+    assert "cb({ kind, slug, id, page })" in ws
+    notes = _nocomments(_read(_NOTES))
+    assert "_insertHighlightLink(body, savedRange, kind || \"paper\", slug, id, page)" in notes
+    fn = notes[notes.index("function _insertHighlightLink("):]
+    assert "_highlightLinkLabel(slug, page)" in fn[:400]

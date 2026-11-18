@@ -76,7 +76,7 @@ for (const mv of {json.dumps(moves)}) {{
   state.mode = mv.mode;
   state[MODES_BY_ID[mv.mode].selectedKey] = mv.id;
   state.navigating = !!mv.navigating;
-  _recordPlace();
+  _recordPlace(!!mv.viaTab);
   state.navigating = false;
 }}
 console.log(JSON.stringify({{history: state.history, at: state.historyAt}}));
@@ -87,8 +87,8 @@ console.log(JSON.stringify({{history: state.history, at: state.historyAt}}));
     return json.loads(out.stdout)
 
 
-def _m(mode, id, navigating=False):
-    return {"mode": mode, "id": id, "navigating": navigating}
+def _m(mode, id, navigating=False, via_tab=False):
+    return {"mode": mode, "id": id, "navigating": navigating, "viaTab": via_tab}
 
 
 # ---------- recording ----------
@@ -121,6 +121,47 @@ def test_a_tab_switch_with_no_selection_is_still_a_place():
     r = _run([_m("papers", "a"), _m("notes", None)])
     assert [(h["mode"], h["id"]) for h in r["history"]] == [
         ("papers", "a"), ("notes", None)]
+
+
+# ---------- a tab switch then a select is one move ----------
+# Bug (2026-11-12): Back lit up the forward arrow but left the screen as
+# it was; a second press went back. The first press had landed on the
+# entry the tab switch made, in the same tab, with nothing new to show.
+
+def _places(r):
+    return [(h["mode"], h["id"]) for h in r["history"]]
+
+
+def test_opening_a_tab_then_picking_is_one_place():
+    """Catches the reported bug: Papers → Notes tab → note n1 kept
+    (notes, None) between them, so Back from n1 stopped there first."""
+    r = _run([_m("papers", "a"), _m("notes", None, via_tab=True), _m("notes", "n1")])
+    assert _places(r) == [("papers", "a"), ("notes", "n1")]
+    assert r["at"] == 1
+
+
+def test_a_link_to_a_paper_is_one_place():
+    """Catches the same bug on the link path: a note's paper link
+    switches to Papers (recording the paper that WAS open there), then
+    selects the linked one. Back must return to the note."""
+    r = _run([_m("notes", "n1"), _m("papers", "old", via_tab=True), _m("papers", "linked")])
+    assert _places(r) == [("notes", "n1"), ("papers", "linked")]
+
+
+def test_tab_switches_alone_stay_places():
+    """Catches the merge swallowing tab switches nobody followed with a
+    pick, or merging a select into a different tab's entry."""
+    r = _run([_m("papers", "a"), _m("notes", None, via_tab=True),
+              _m("projects", None, via_tab=True), _m("papers", "b")])
+    assert _places(r) == [("papers", "a"), ("notes", None),
+                          ("projects", None), ("papers", "b")]
+
+
+def test_only_the_first_pick_after_a_tab_switch_merges():
+    """Catches every select replacing the previous entry, which would
+    leave one entry per tab and make Back skip papers you opened."""
+    r = _run([_m("notes", None, via_tab=True), _m("notes", "n1"), _m("notes", "n2")])
+    assert _places(r) == [("notes", "n1"), ("notes", "n2")]
 
 
 # ---------- the branch rule ----------
@@ -183,9 +224,20 @@ def test_recording_happens_at_exactly_one_choke_point():
     wrap = re.search(r"for \(const m of MODES\) \{\s*const raw = m\.select;", src)
     assert wrap, "the select wrap is gone"
     # _recordPlace is called from: the wrap, switchMode, and nowhere else.
-    calls = len(re.findall(r"_recordPlace\(\)", src)) - 1   # minus the definition
+    calls = len(re.findall(r"_recordPlace\((true)?\)", src))
     assert calls == 2, (
         f"expected exactly 2 call sites (the select wrap + switchMode), found {calls}")
+
+
+def test_only_the_tab_switch_marks_its_entry():
+    """Catches switchMode recording without the tab flag (no merge ever
+    happens, the reported bug returns), or the select wrap passing it
+    (every pick would be replaced by the next one)."""
+    src = "\n".join(l for l in _app().split("\n") if not l.strip().startswith("//"))
+    switch = src[src.index("function switchMode("):]
+    assert "_recordPlace(true)" in switch[:switch.index("\n}\n")]
+    wrap = src[src.index("const raw = m.select;"):]
+    assert "_recordPlace();" in wrap[:200]
 
 
 def test_the_arrows_disable_at_both_ends():
